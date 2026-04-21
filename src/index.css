@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-bg-base text-text-primary font-sans antialiased;
+    background-image: radial-gradient(
+        1000px 500px at 90% -10%,
+        rgba(63, 185, 80, 0.06),
+        transparent 60%
+      ),
+      radial-gradient(800px 400px at -10% 10%, rgba(88, 166, 255, 0.05), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  *::selection {
+    background: rgba(63, 185, 80, 0.35);
+    color: #fff;
+  }
+
+  /* Scrollbar */
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: #222b3a;
+    border-radius: 8px;
+    border: 2px solid #0d1117;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: #2f3b51;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display tracking-tight;
+  }
+}
+
+@layer components {
+  .card {
+    @apply relative rounded-xl border border-bg-border bg-bg-surface shadow-card;
+  }
+
+  .card-hover {
+    @apply transition-colors hover:border-bg-hover hover:bg-bg-elevated;
+  }
+
+  .metric-value {
+    @apply font-mono tabular-nums;
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded bg-bg-elevated;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.04),
+      transparent
+    );
+    animation: shimmer 1.6s infinite;
+  }
+
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-base;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-md border border-bg-border bg-bg-elevated px-2 py-0.5 text-xs text-text-secondary;
+  }
+
+  .divider {
+    @apply border-t border-bg-border;
+  }
+
+  .grid-bg {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+}
+
+/* Recharts dark theme tweaks */
+.recharts-cartesian-grid line {
+  stroke: rgba(255, 255, 255, 0.05);
+}
+.recharts-default-tooltip {
+  background: #121821 !important;
+  border: 1px solid #222b3a !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important;
+}
+.recharts-tooltip-label,
+.recharts-tooltip-item {
+  color: #e6edf3 !important;
+}
