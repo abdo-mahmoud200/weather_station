@@ -5,6 +5,7 @@ import {
   loginWithCredentials,
   updateStoredUser,
 } from '../../services/auth'
+import { disconnectSocket } from '../../services/socket'
 
 const AuthContext = createContext(null)
 
@@ -25,6 +26,7 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     clearStoredSession()
+    disconnectSocket()
     setSession(null)
   }
 

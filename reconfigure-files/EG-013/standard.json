@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-013",
+  "stationName": "Abu Simbel",
+  "profile": "standard",
+  "settings": {
+    "readingIntervalSeconds": 30,
+    "alertProfile": "desert-standard",
+    "transmissionMode": "balanced"
+  }
+}

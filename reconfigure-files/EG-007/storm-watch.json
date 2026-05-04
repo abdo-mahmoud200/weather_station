@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-007",
+  "stationName": "Jabal El-Shayeb",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

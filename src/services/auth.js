@@ -1,4 +1,5 @@
 const SESSION_KEY = 'wws.auth.session'
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
 
 const DEMO_USER = {
   id: 'USR-001',
@@ -13,16 +14,30 @@ const DEMO_USER = {
 }
 
 export async function loginWithCredentials({ email, password }) {
-  await delay(320)
-
   const normalizedEmail = String(email || '').trim().toLowerCase()
   const normalizedPassword = String(password || '')
 
-  if (normalizedEmail !== 'operator@wws.gov' || normalizedPassword !== 'Wws123!') {
-    throw new Error('Invalid credentials. Use the assigned operator account.')
+  const response = await fetch(`${API_BASE}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify({ email: normalizedEmail, password: normalizedPassword }),
+  })
+
+  if (!response.ok) {
+    let message = 'Invalid credentials. Use the assigned operator account.'
+    try {
+      const body = await response.json()
+      if (body?.error) message = body.error
+    } catch {
+      // ignore
+    }
+    throw new Error(message)
   }
 
+  const payload = await response.json()
+
   const session = {
+    token: payload.token,
     user: {
       ...DEMO_USER,
       email: normalizedEmail,
@@ -32,6 +47,11 @@ export async function loginWithCredentials({ email, password }) {
 
   persistSession(session)
   return session
+}
+
+export function getAuthToken() {
+  const session = getStoredSession()
+  return session?.token || null
 }
 
 export function getStoredSession() {
@@ -75,6 +95,3 @@ export function updateStoredUser(patch) {
   return next
 }
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
-}

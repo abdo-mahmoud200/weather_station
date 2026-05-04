@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-013",
+  "stationName": "Abu Simbel",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

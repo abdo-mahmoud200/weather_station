@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-012",
+  "stationName": "Halayeb",
+  "profile": "standard",
+  "settings": {
+    "readingIntervalSeconds": 30,
+    "alertProfile": "desert-standard",
+    "transmissionMode": "balanced"
+  }
+}

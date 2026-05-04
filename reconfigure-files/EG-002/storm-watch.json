@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-002",
+  "stationName": "Farafra",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-004",
+  "stationName": "Wadi El-Rayan",
+  "profile": "low-power",
+  "settings": {
+    "readingIntervalSeconds": 120,
+    "alertProfile": "maintenance",
+    "transmissionMode": "low-power"
+  }
+}

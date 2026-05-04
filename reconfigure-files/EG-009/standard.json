@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-009",
+  "stationName": "Wadi Feiran",
+  "profile": "standard",
+  "settings": {
+    "readingIntervalSeconds": 45,
+    "alertProfile": "desert-standard",
+    "transmissionMode": "balanced"
+  }
+}

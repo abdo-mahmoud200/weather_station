@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-010",
+  "stationName": "Nabq",
+  "profile": "low-power",
+  "settings": {
+    "readingIntervalSeconds": 120,
+    "alertProfile": "maintenance",
+    "transmissionMode": "low-power"
+  }
+}

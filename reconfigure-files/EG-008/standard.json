@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-008",
+  "stationName": "Jabal Musa",
+  "profile": "standard",
+  "settings": {
+    "readingIntervalSeconds": 45,
+    "alertProfile": "desert-standard",
+    "transmissionMode": "balanced"
+  }
+}

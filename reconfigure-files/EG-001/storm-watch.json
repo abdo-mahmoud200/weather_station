@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-001",
+  "stationName": "Siwa Oasis",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-002",
+  "stationName": "Farafra",
+  "profile": "low-power",
+  "settings": {
+    "readingIntervalSeconds": 120,
+    "alertProfile": "maintenance",
+    "transmissionMode": "low-power"
+  }
+}

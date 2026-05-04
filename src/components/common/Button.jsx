@@ -37,6 +37,7 @@ const Button = forwardRef(function Button(
     icon: Icon,
     iconRight: IconRight,
     loading = false,
+    disabled = false,
     className = '',
     children,
     ...props
@@ -45,7 +46,13 @@ const Button = forwardRef(function Button(
 ) {
   const cls = [base, sizes[size], variants[variant], className].join(' ')
   return (
-    <AsComponent ref={ref} className={cls} disabled={loading || props.disabled} {...props}>
+    <AsComponent
+      ref={ref}
+      className={cls}
+      {...props}
+      disabled={loading || disabled}
+      aria-busy={loading || undefined}
+    >
       {loading ? (
         <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
       ) : Icon ? (

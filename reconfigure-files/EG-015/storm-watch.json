@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-015",
+  "stationName": "Dakhla",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

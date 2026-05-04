@@ -25,14 +25,16 @@ import { useStation } from '../../hooks/useStations'
 import { useRainfall7d, useStationSeries } from '../../hooks/useWeatherData'
 import useAutoRefresh from '../../hooks/useAutoRefresh'
 import useNowTicker from '../../hooks/useNowTicker'
+import useRefreshInterval from '../../hooks/useRefreshInterval'
 import { formatMetric, timeAgo } from '../../utils/formatters'
-import { getRefreshIntervalMs } from '../../utils/preferences'
+import { useRealtimeRefresh, useStationSocket } from '../../hooks/useSocket'
 
 export default function DetailView({ stationId }) {
   const navigate = useNavigate()
   const { station, loading, refresh, lastUpdated } = useStation(stationId)
-  const refreshIntervalMs = useMemo(() => getRefreshIntervalMs(), [])
+  const refreshIntervalMs = useRefreshInterval()
   useAutoRefresh(refresh, refreshIntervalMs, [stationId])
+  useStationSocket(stationId)
   useNowTicker(1000)
 
   const [refreshKey, setRefreshKey] = useState(0)
@@ -42,21 +44,41 @@ export default function DetailView({ stationId }) {
     refresh()
   }
 
+  useRealtimeRefresh(
+    refreshAll,
+    ['reading:new', 'status:changed', 'alert:new', 'station:updated', 'stations:updated', 'khamaseen:started', 'khamaseen:ended'],
+    [stationId],
+    {
+      filter: (_event, payload) => {
+        // Network-wide events (no stationId) always refresh; per-station
+        // events only refresh when they target the watched station.
+        const targetId = payload?.stationId ?? payload?.station?.id ?? payload?.alert?.stationId
+        return !targetId || targetId === stationId
+      },
+    },
+  )
+
   const airSeries = useStationSeries(stationId, 'airTemperature', 24, refreshKey)
   const groundSeries = useStationSeries(stationId, 'groundTemperature', 24, refreshKey)
   const pressureSeries = useStationSeries(stationId, 'pressure', 24, refreshKey)
   const windSeries = useStationSeries(stationId, 'windSpeed', 24, refreshKey)
   const rainfall = useRainfall7d(stationId, refreshKey)
 
-  const temperatureSeries = useMemo(
-    () =>
-      airSeries.data.map((point, index) => ({
-        t: point.t,
-        airTemperature: point.value,
-        groundTemperature: groundSeries.data[index]?.value ?? null,
-      })),
-    [airSeries.data, groundSeries.data],
-  )
+  const temperatureSeries = useMemo(() => {
+    const groundByT = new Map(groundSeries.data.map((point) => [point.t, point.value]))
+    return airSeries.data.map((point) => ({
+      t: point.t,
+      airTemperature: point.value,
+      groundTemperature: groundByT.get(point.t) ?? null,
+    }))
+  }, [airSeries.data, groundSeries.data])
+
+  const total7d = useMemo(() => {
+    if (!rainfall.data || rainfall.data.length === 0) return null
+    return Number(
+      rainfall.data.reduce((sum, point) => sum + Number(point.value || 0), 0).toFixed(2),
+    )
+  }, [rainfall.data])
 
   if (!loading && !station) {
     return (
@@ -165,7 +187,7 @@ export default function DetailView({ stationId }) {
                 value={station.metrics.rainfall.total24h}
                 unit={station.metrics.rainfall.unit}
                 digits={2}
-                footer={`7d accumulation ${formatMetric(station.metrics.rainfall.total7d, 'mm', 2)}`}
+                footer={`7d accumulation ${formatMetric(total7d, 'mm', 2)}`}
                 updatedAt={station.lastSync}
               />
 

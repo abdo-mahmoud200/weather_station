@@ -13,15 +13,15 @@ import { useToast } from '../components/common/Toast'
 import { createStation, decommissionStation, fetchStationRegistry } from '../services/api'
 import { REGIONS } from '../services/mockData'
 import { formatCoordinates, formatDateTime, timeAgo } from '../utils/formatters'
+import { useRealtimeRefresh } from '../hooks/useSocket'
 
 const INITIAL_FORM = {
-  id: '',
   name: '',
+  name_ar: '',
   region: REGIONS[0],
   lat: '',
   lon: '',
   elevation: '',
-  initialState: 'Running',
   notes: '',
 }
 
@@ -50,6 +50,12 @@ export default function StationManagement() {
     loadRegistry()
   }, [loadRegistry])
 
+  useRealtimeRefresh(
+    loadRegistry,
+    ['station:added', 'station:removed', 'station:updated', 'status:changed', 'stations:updated'],
+    [loadRegistry],
+  )
+
   const activeStations = useMemo(
     () => stations.filter((station) => !station.archivedAt),
     [stations],
@@ -74,8 +80,8 @@ export default function StationManagement() {
 
   const handleCreate = async (event) => {
     event.preventDefault()
-    if (!form.id.trim() || !form.name.trim()) {
-      toast.warning('Station ID and station name are required.')
+    if (!form.name.trim()) {
+      toast.warning('Station name is required.')
       return
     }
     if (Number.isNaN(Number(form.lat)) || Number.isNaN(Number(form.lon))) {
@@ -86,13 +92,12 @@ export default function StationManagement() {
     setSaving(true)
     try {
       await createStation({
-        id: form.id.trim().toUpperCase(),
         name: form.name.trim(),
+        name_ar: form.name_ar.trim() || form.name.trim(),
         region: form.region,
         lat: Number(form.lat),
         lon: Number(form.lon),
         elevation: Number(form.elevation),
-        initialState: form.initialState,
         notes: form.notes.trim(),
       })
       toast.success('Station registered')
@@ -149,18 +154,18 @@ export default function StationManagement() {
             />
             <CardBody>
               <form onSubmit={handleCreate} className="space-y-4">
-                <Field label="Station ID">
-                  <Input
-                    placeholder="WS-016"
-                    value={form.id}
-                    onChange={(event) => handleChange('id', event.target.value)}
-                  />
-                </Field>
                 <Field label="Location name">
                   <Input
-                    placeholder="Granite Watch"
+                    placeholder="Qattara Depression"
                     value={form.name}
                     onChange={(event) => handleChange('name', event.target.value)}
+                  />
+                </Field>
+                <Field label="Arabic name">
+                  <Input
+                    placeholder="منخفض القطارة"
+                    value={form.name_ar}
+                    onChange={(event) => handleChange('name_ar', event.target.value)}
                   />
                 </Field>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -174,19 +179,6 @@ export default function StationManagement() {
                           {region}
                         </option>
                       ))}
-                    </Select>
-                  </Field>
-                  <Field label="Initial state">
-                    <Select
-                      value={form.initialState}
-                      onChange={(event) => handleChange('initialState', event.target.value)}
-                    >
-                      <option value="Running">Running</option>
-                      <option value="Collecting">Collecting</option>
-                      <option value="Transmitting">Transmitting</option>
-                      <option value="Powersave">Powersave</option>
-                      <option value="Testing">Testing</option>
-                      <option value="Shutdown">Shutdown</option>
                     </Select>
                   </Field>
                 </div>
@@ -225,7 +217,7 @@ export default function StationManagement() {
                   />
                 </Field>
                 <div className="rounded-xl border border-bg-border bg-bg-elevated/20 p-3 text-sm text-text-secondary">
-                  Removing a station in this system means decommissioning it from the platform registry.
+                  New station IDs are assigned automatically by the backend as EG-XXX. Removing a station means decommissioning it from the platform registry.
                   The physical hardware may still exist in the field until a separate maintenance mission removes it.
                 </div>
                 <Button type="submit" variant="primary" icon={PlusCircle} loading={saving} className="w-full">

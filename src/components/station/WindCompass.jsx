@@ -1,11 +1,15 @@
+import { useId } from 'react'
 import { degreesToCompass } from '../../utils/formatters'
 
 /**
  * Wind direction compass dial. Renders a simple SVG needle that rotates
  * to the given degree. The compass direction label is shown below.
  */
-export default function WindCompass({ degrees = 0, speed, unit = 'm/s', size = 170 }) {
-  const deg = ((degrees % 360) + 360) % 360
+export default function WindCompass({ degrees, speed, unit = 'm/s', size = 170 }) {
+  const reactId = useId()
+  const gradientId = `compassBg-${reactId.replace(/:/g, '')}`
+  const hasDirection = Number.isFinite(Number(degrees))
+  const deg = hasDirection ? (((Number(degrees) % 360) + 360) % 360) : 0
   const r = size / 2
   const ticks = Array.from({ length: 16 })
   const labels = ['N', 'E', 'S', 'W']
@@ -15,12 +19,12 @@ export default function WindCompass({ degrees = 0, speed, unit = 'm/s', size = 1
       <div className="relative" style={{ width: size, height: size }}>
         <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
           <defs>
-            <radialGradient id="compassBg" cx="50%" cy="50%" r="50%">
+            <radialGradient id={gradientId} cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#161d29" />
               <stop offset="100%" stopColor="#0d1117" />
             </radialGradient>
           </defs>
-          <circle cx={r} cy={r} r={r - 2} fill="url(#compassBg)" stroke="#222b3a" strokeWidth="2" />
+          <circle cx={r} cy={r} r={r - 2} fill={`url(#${gradientId})`} stroke="#222b3a" strokeWidth="2" />
           <circle cx={r} cy={r} r={r - 16} fill="none" stroke="rgba(255,255,255,0.04)" />
 
           {ticks.map((_, index) => {
@@ -62,15 +66,17 @@ export default function WindCompass({ degrees = 0, speed, unit = 'm/s', size = 1
             )
           })}
 
-          <g transform={`rotate(${deg} ${r} ${r})`}>
-            <polygon points={`${r},${16} ${r - 6},${r} ${r + 6},${r}`} fill="#f85149" opacity="0.95" />
-            <polygon
-              points={`${r},${size - 16} ${r - 6},${r} ${r + 6},${r}`}
-              fill="#e6edf3"
-              opacity="0.75"
-            />
-            <circle cx={r} cy={r} r="5" fill="#0d1117" stroke="#e6edf3" strokeWidth="1.5" />
-          </g>
+          {hasDirection && (
+            <g transform={`rotate(${deg} ${r} ${r})`}>
+              <polygon points={`${r},${16} ${r - 6},${r} ${r + 6},${r}`} fill="#f85149" opacity="0.95" />
+              <polygon
+                points={`${r},${size - 16} ${r - 6},${r} ${r + 6},${r}`}
+                fill="#e6edf3"
+                opacity="0.75"
+              />
+              <circle cx={r} cy={r} r="5" fill="#0d1117" stroke="#e6edf3" strokeWidth="1.5" />
+            </g>
+          )}
         </svg>
       </div>
 
@@ -78,7 +84,13 @@ export default function WindCompass({ degrees = 0, speed, unit = 'm/s', size = 1
         <div>
           <div className="text-[10px] uppercase tracking-wider text-text-muted">Direction</div>
           <div className="metric-value text-base font-semibold text-text-primary">
-            {deg.toFixed(0)} deg <span className="text-text-muted">{degreesToCompass(deg)}</span>
+            {hasDirection ? (
+              <>
+                {deg.toFixed(0)} deg <span className="text-text-muted">{degreesToCompass(deg)}</span>
+              </>
+            ) : (
+              <span className="text-text-muted">--</span>
+            )}
           </div>
         </div>
         <div>

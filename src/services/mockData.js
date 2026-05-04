@@ -19,14 +19,13 @@ const STATES = [
 ]
 
 const REGIONS = [
-  'Alpine North',
-  'Alpine South',
-  'Coastal West',
-  'Coastal East',
-  'Desert Basin',
-  'Boreal Forest',
-  'Tundra',
-  'Highland Plateau',
+  'Western Desert',
+  'Eastern Desert',
+  'South Sinai Mtn',
+  'South Sinai',
+  'Sinai Coast',
+  'Red Sea Coast',
+  'Upper Egypt',
 ]
 
 const LOCATIONS = [
@@ -249,9 +248,21 @@ export function generateRainfall7d(stationId) {
 // ————————————————————————————————————————————————————————
 // Alerts & activity log
 // ————————————————————————————————————————————————————————
-const ALERT_TYPES = ['sensor failure', 'connection lost', 'battery low', 'data anomaly']
+const ALERT_TYPES = [
+  'temperature_high',
+  'temperature_critical',
+  'temperature_freezing',
+  'battery_low',
+  'battery_critical',
+  'signal_weak',
+  'signal_lost',
+  'wind_strong',
+  'wind_storm',
+  'station_shutdown',
+  'station_connection_lost',
+]
 const SEVERITIES = ['info', 'warning', 'critical']
-const STATUSES = ['new', 'acknowledged', 'resolved']
+const STATUSES = ['new', 'acknowledged']
 
 export const MOCK_ALERTS = (() => {
   const r = mulberry32(42)
@@ -297,11 +308,17 @@ const EVENT_TYPES = [
   'command.powersave',
   'command.reconfigure',
   'command.remote',
+  'command.reset_battery',
+  'command.stabilize_signal',
+  'command.calibrate_instruments',
+  'command.close_alerts',
   'system.station.registered',
+  'system.station.updated',
   'system.station.decommissioned',
-  'system.autorestart',
-  'system.heartbeat',
   'system.firmware.update',
+  'status.changed',
+  'alert.acknowledged',
+  'alert.acknowledged.clear',
 ]
 
 export const MOCK_ACTIVITY = (() => {
@@ -336,6 +353,14 @@ function eventMessage(type, station) {
       return `New configuration uploaded to ${station.id}.`
     case 'command.remote':
       return `Remote command dispatched to ${station.id}.`
+    case 'command.reset_battery':
+      return `Battery telemetry reset on ${station.id}.`
+    case 'command.stabilize_signal':
+      return `Radio link stabilized on ${station.id}.`
+    case 'command.calibrate_instruments':
+      return `Instrument calibration completed on ${station.id}.`
+    case 'command.close_alerts':
+      return `Reviewed alerts closed on ${station.id}.`
     case 'system.station.registered':
       return `${station.id} was added to the monitoring registry.`
     case 'system.station.decommissioned':

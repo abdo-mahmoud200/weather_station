@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-012",
+  "stationName": "Halayeb",
+  "profile": "low-power",
+  "settings": {
+    "readingIntervalSeconds": 120,
+    "alertProfile": "maintenance",
+    "transmissionMode": "low-power"
+  }
+}

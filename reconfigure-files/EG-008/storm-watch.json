@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-008",
+  "stationName": "Jabal Musa",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

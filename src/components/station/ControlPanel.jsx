@@ -1,16 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
+  AlertTriangle,
   BatteryCharging,
   CheckCircle2,
   FileUp,
   History,
   Play,
   Power,
+  Radio,
   RotateCcw,
   Send,
+  SlidersHorizontal,
   Terminal,
   Upload,
+  Wrench,
   XCircle,
 } from 'lucide-react'
 import PageWrapper, { PageBody, PageHeader } from '../layout/PageWrapper'
@@ -24,13 +28,13 @@ import { Skeleton } from '../common/Skeleton'
 import { useToast } from '../common/Toast'
 import { useStation } from '../../hooks/useStations'
 import useAutoRefresh from '../../hooks/useAutoRefresh'
+import useRefreshInterval from '../../hooks/useRefreshInterval'
 import {
   fetchUpdateHistory,
   sendStationCommand,
   uploadSoftware,
 } from '../../services/api'
 import { formatDateTime } from '../../utils/formatters'
-import { getRefreshIntervalMs } from '../../utils/preferences'
 import { isValidCommand, isValidSoftwareFile } from '../../utils/validators'
 
 const COMMANDS = [
@@ -51,8 +55,8 @@ const COMMANDS = [
     icon: Power,
     variant: 'danger',
     phrase: 'SHUTDOWN',
-    allow: (station) => station.state === 'Running',
-    disabledMsg: 'Station must be Running to shut down.',
+    allow: (station) => station.state !== 'Shutdown',
+    disabledMsg: 'Station is already Shutdown.',
     description: (station) =>
       `This will power down station ${station.id}. All data collection halts until restarted on-site or remotely.`,
   },
@@ -71,12 +75,22 @@ const COMMANDS = [
   {
     key: 'reconfigure',
     label: 'Reconfigure',
+    icon: SlidersHorizontal,
+    variant: 'orange',
+    phrase: null,
+    allow: () => true,
+    description: (station) =>
+      `Update operating settings for ${station.id}.`,
+  },
+  {
+    key: 'software_update',
+    label: 'Software Update',
     icon: Upload,
     variant: 'orange',
     phrase: null,
     allow: () => true,
     description: (station) =>
-      `Open the software update panel for ${station.id} and upload a new configuration or firmware bundle.`,
+      `Upload a new firmware or configuration bundle for ${station.id}.`,
   },
   {
     key: 'remote',
@@ -90,22 +104,63 @@ const COMMANDS = [
   },
 ]
 
+const MAINTENANCE_ACTIONS = {
+  active_alerts: {
+    command: 'close_alerts',
+    label: 'Close Reviewed Alerts',
+    icon: CheckCircle2,
+  },
+  battery_low: {
+    command: 'reset_battery',
+    label: 'Reset Battery',
+    icon: BatteryCharging,
+  },
+  signal_weak: {
+    command: 'stabilize_signal',
+    label: 'Stabilize Signal',
+    icon: Radio,
+  },
+  wind_strong: {
+    command: 'calibrate_instruments',
+    label: 'Calibrate Instruments',
+    icon: Wrench,
+  },
+  temperature_high: {
+    command: 'calibrate_instruments',
+    label: 'Calibrate Instruments',
+    icon: Wrench,
+  },
+  instrument_check: {
+    command: 'calibrate_instruments',
+    label: 'Calibrate Instruments',
+    icon: Wrench,
+  },
+}
+
 export default function StationControlPanel({ stationId }) {
   const navigate = useNavigate()
   const toast = useToast()
   const { station, loading, refresh } = useStation(stationId)
-  const refreshIntervalMs = getRefreshIntervalMs()
+  const refreshIntervalMs = useRefreshInterval()
   useAutoRefresh(refresh, refreshIntervalMs, [stationId])
 
   const [confirm, setConfirm] = useState({ open: false, cmd: null })
   const [cmdLoading, setCmdLoading] = useState(false)
+  const [maintenanceLoading, setMaintenanceLoading] = useState('')
   const [remoteOpen, setRemoteOpen] = useState(false)
+  const [reconfigureOpen, setReconfigureOpen] = useState(false)
   const [updateOpen, setUpdateOpen] = useState(false)
 
   const [instrument, setInstrument] = useState('anemometer')
   const [cmdText, setCmdText] = useState('')
   const [cmdResponse, setCmdResponse] = useState('')
   const [cmdSending, setCmdSending] = useState(false)
+
+  const [readingInterval, setReadingInterval] = useState(10)
+  const [alertProfile, setAlertProfile] = useState('desert-extreme')
+  const [transmissionMode, setTransmissionMode] = useState('balanced')
+  const [configFileName, setConfigFileName] = useState('')
+  const [reconfiguring, setReconfiguring] = useState(false)
 
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
@@ -133,6 +188,21 @@ export default function StationControlPanel({ stationId }) {
     }
   }
 
+  const runMaintenance = async (action) => {
+    if (!station || !action) return
+
+    setMaintenanceLoading(action.command)
+    try {
+      await sendStationCommand(station.id, action.command)
+      toast.success(`${action.label} completed`, { title: station.id })
+      await refresh()
+    } catch (error) {
+      toast.error(error.message || 'Maintenance action failed')
+    } finally {
+      setMaintenanceLoading('')
+    }
+  }
+
   const sendRemote = async () => {
     if (!station) return
     if (!isValidCommand(cmdText)) {
@@ -154,6 +224,64 @@ export default function StationControlPanel({ stationId }) {
       toast.error('Remote command failed')
     } finally {
       setCmdSending(false)
+    }
+  }
+
+  const loadReconfigureFile = async (selectedFile) => {
+    if (!selectedFile) return
+
+    try {
+      const parsed = JSON.parse(await selectedFile.text())
+      const settings = parsed.settings || parsed
+
+      if (parsed.stationId && station?.id && parsed.stationId !== station.id) {
+        toast.error(`Config file is for ${parsed.stationId}, but current station is ${station.id}. File ignored.`)
+        setConfigFileName('')
+        return
+      }
+
+      if (settings.readingIntervalSeconds !== undefined) {
+        setReadingInterval(settings.readingIntervalSeconds)
+      }
+      if (settings.alertProfile) {
+        setAlertProfile(settings.alertProfile)
+      }
+      if (settings.transmissionMode) {
+        setTransmissionMode(settings.transmissionMode)
+      }
+
+      setConfigFileName(selectedFile.name)
+      toast.success('Configuration file loaded')
+    } catch {
+      toast.error('Invalid configuration JSON file')
+      setConfigFileName('')
+    }
+  }
+
+  const doReconfigure = async () => {
+    if (!station) return
+
+    const interval = Number(readingInterval)
+    if (!Number.isFinite(interval) || interval < 5 || interval > 3600) {
+      toast.warning('Reading interval must be between 5 and 3600 seconds.')
+      return
+    }
+
+    setReconfiguring(true)
+    try {
+      await sendStationCommand(station.id, 'reconfigure', {
+        settings: {
+          readingIntervalSeconds: interval,
+          alertProfile,
+          transmissionMode,
+        },
+      })
+      toast.success('Configuration sent', { title: station.id })
+      await refresh()
+    } catch (error) {
+      toast.error(error.message || 'Reconfigure failed')
+    } finally {
+      setReconfiguring(false)
     }
   }
 
@@ -242,7 +370,7 @@ export default function StationControlPanel({ stationId }) {
                 subtitle="Dangerous actions require a typed confirmation phrase."
               />
               <CardBody>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                   {COMMANDS.map((command) => {
                     const allowed = command.allow(station)
 
@@ -285,7 +413,8 @@ export default function StationControlPanel({ stationId }) {
                           disabled={!allowed}
                           onClick={() => {
                             if (command.key === 'remote') setRemoteOpen(true)
-                            else if (command.key === 'reconfigure') setUpdateOpen(true)
+                            else if (command.key === 'reconfigure') setReconfigureOpen(true)
+                            else if (command.key === 'software_update') setUpdateOpen(true)
                             else setConfirm({ open: true, cmd: command })
                           }}
                           icon={command.icon}
@@ -298,6 +427,51 @@ export default function StationControlPanel({ stationId }) {
                 </div>
               </CardBody>
             </Card>
+
+            {station.warningReasons?.length > 0 && (
+              <Card>
+                <CardHeader
+                  icon={AlertTriangle}
+                  title="Warning Diagnosis"
+                  subtitle="Review the cause, then run the matching maintenance action."
+                />
+                <CardBody>
+                  <ul className="space-y-2">
+                    {station.warningReasons.map((reason) => {
+                      const action = MAINTENANCE_ACTIONS[reason.code]
+                      const ActionIcon = action?.icon
+
+                      return (
+                        <li
+                          key={reason.code}
+                          className="flex flex-col gap-3 rounded-lg border border-accent-warning/25 bg-accent-warningSoft/60 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                              <AlertTriangle size={14} className="text-accent-warning" />
+                              {reason.label}
+                            </div>
+                            <p className="mt-1 text-xs text-text-muted">{reason.detail}</p>
+                          </div>
+                          {action && (
+                            <Button
+                              size="sm"
+                              variant="primary"
+                              icon={ActionIcon}
+                              loading={maintenanceLoading === action.command}
+                              onClick={() => runMaintenance(action)}
+                              className="w-full sm:w-auto"
+                            >
+                              {action.label}
+                            </Button>
+                          )}
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </CardBody>
+              </Card>
+            )}
 
             {remoteOpen && (
               <Card>
@@ -377,6 +551,100 @@ export default function StationControlPanel({ stationId }) {
               </Card>
             )}
 
+            {reconfigureOpen && (
+              <Card>
+                <CardHeader
+                  icon={SlidersHorizontal}
+                  title="Station Reconfiguration"
+                  subtitle="Apply operating settings to the selected station."
+                  action={
+                    <Button size="sm" variant="ghost" onClick={() => setReconfigureOpen(false)}>
+                      Close
+                    </Button>
+                  }
+                />
+                <CardBody>
+                  <div className="mb-4 rounded-lg border border-dashed border-bg-border bg-bg-base/40 p-3">
+                    <label
+                      htmlFor="reconfigure-file"
+                      className="flex cursor-pointer flex-col gap-1 text-sm text-text-secondary hover:text-text-primary"
+                    >
+                      <span className="font-medium text-text-primary">Load configuration file</span>
+                      <span className="text-xs text-text-muted">
+                        {configFileName || 'Choose one of the sample .json files from reconfigure-files/.'}
+                      </span>
+                    </label>
+                    <input
+                      id="reconfigure-file"
+                      type="file"
+                      className="hidden"
+                      accept=".json,application/json"
+                      onChange={(event) => loadReconfigureFile(event.target.files?.[0] || null)}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 lg:grid-cols-[180px_220px_220px_auto]">
+                    <div>
+                      <label className="mb-1 block text-[11px] uppercase tracking-wider text-text-muted">
+                        Reading interval
+                      </label>
+                      <Input
+                        type="number"
+                        min="5"
+                        max="3600"
+                        step="5"
+                        value={readingInterval}
+                        onChange={(event) => setReadingInterval(event.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[11px] uppercase tracking-wider text-text-muted">
+                        Alert profile
+                      </label>
+                      <Select
+                        value={alertProfile}
+                        onChange={(event) => setAlertProfile(event.target.value)}
+                        className="w-full"
+                      >
+                        <option value="desert-standard">Desert standard</option>
+                        <option value="desert-extreme">Desert extreme</option>
+                        <option value="maintenance">Maintenance</option>
+                      </Select>
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[11px] uppercase tracking-wider text-text-muted">
+                        Transmission
+                      </label>
+                      <Select
+                        value={transmissionMode}
+                        onChange={(event) => setTransmissionMode(event.target.value)}
+                        className="w-full"
+                      >
+                        <option value="balanced">Balanced</option>
+                        <option value="realtime">Realtime</option>
+                        <option value="low-power">Low power</option>
+                      </Select>
+                    </div>
+                    <div className="flex items-end">
+                      <Button
+                        icon={SlidersHorizontal}
+                        variant="primary"
+                        loading={reconfiguring}
+                        onClick={doReconfigure}
+                        className="w-full lg:w-auto"
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs text-text-muted">
+                    Applying settings moves the station to Configuring briefly, then it returns to normal telemetry.
+                  </p>
+                </CardBody>
+              </Card>
+            )}
+
             {updateOpen && (
               <Card>
                 <CardHeader
@@ -452,8 +720,8 @@ export default function StationControlPanel({ stationId }) {
                         {history.length === 0 && (
                           <li className="px-3 py-4 text-text-muted">No updates recorded.</li>
                         )}
-                        {history.map((item, index) => (
-                          <li key={index} className="flex items-start gap-2 px-3 py-2">
+                        {history.map((item) => (
+                          <li key={`${item.version}-${item.installedAt}`} className="flex items-start gap-2 px-3 py-2">
                             <span
                               className={`mt-0.5 ${
                                 item.status === 'success'

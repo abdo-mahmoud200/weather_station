@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-003",
+  "stationName": "Shark El-Ouinat",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

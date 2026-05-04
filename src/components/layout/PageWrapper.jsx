@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchAlerts } from '../../services/api'
 import useAutoRefresh from '../../hooks/useAutoRefresh'
-import { getRefreshIntervalMs } from '../../utils/preferences'
+import useRefreshInterval from '../../hooks/useRefreshInterval'
+import { useRealtimeRefresh } from '../../hooks/useSocket'
 import Navbar from './Navbar'
 import Sidebar from './Sidebar'
 
@@ -10,7 +11,7 @@ export default function PageWrapper({ children, alertsCount = 0 }) {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [liveAlertsCount, setLiveAlertsCount] = useState(alertsCount)
-  const refreshIntervalMs = getRefreshIntervalMs()
+  const refreshIntervalMs = useRefreshInterval()
 
   const refreshAlertsCount = useCallback(async () => {
     try {
@@ -26,6 +27,11 @@ export default function PageWrapper({ children, alertsCount = 0 }) {
   }, [refreshAlertsCount])
 
   useAutoRefresh(refreshAlertsCount, refreshIntervalMs)
+  useRealtimeRefresh(
+    refreshAlertsCount,
+    ['alert:new', 'status:changed', 'station:removed', 'station:updated', 'stations:updated'],
+    [refreshAlertsCount],
+  )
 
   return (
     <div className="relative min-h-screen">

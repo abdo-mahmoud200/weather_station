@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-011",
+  "stationName": "Shalatin",
+  "profile": "standard",
+  "settings": {
+    "readingIntervalSeconds": 30,
+    "alertProfile": "desert-standard",
+    "transmissionMode": "balanced"
+  }
+}

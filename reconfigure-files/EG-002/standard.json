@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-002",
+  "stationName": "Farafra",
+  "profile": "standard",
+  "settings": {
+    "readingIntervalSeconds": 30,
+    "alertProfile": "desert-standard",
+    "transmissionMode": "balanced"
+  }
+}

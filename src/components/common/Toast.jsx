@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState } from 'react'
+import { createContext, useCallback, useContext, useRef, useState } from 'react'
 import { CheckCircle2, Info, AlertTriangle, XCircle, X } from 'lucide-react'
 
 const ToastContext = createContext(null)
@@ -7,8 +7,14 @@ let idSeq = 0
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([])
+  const timersRef = useRef(new Map())
 
   const dismiss = useCallback((id) => {
+    const timerId = timersRef.current.get(id)
+    if (timerId) {
+      clearTimeout(timerId)
+      timersRef.current.delete(id)
+    }
     setToasts((list) => list.filter((t) => t.id !== id))
   }, [])
 
@@ -23,7 +29,11 @@ export function ToastProvider({ children }) {
       }
       setToasts((list) => [...list, t])
       if (t.duration > 0) {
-        setTimeout(() => dismiss(id), t.duration)
+        const timerId = setTimeout(() => {
+          timersRef.current.delete(id)
+          dismiss(id)
+        }, t.duration)
+        timersRef.current.set(id, timerId)
       }
       return id
     },

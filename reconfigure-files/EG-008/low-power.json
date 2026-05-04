@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-008",
+  "stationName": "Jabal Musa",
+  "profile": "low-power",
+  "settings": {
+    "readingIntervalSeconds": 180,
+    "alertProfile": "maintenance",
+    "transmissionMode": "low-power"
+  }
+}

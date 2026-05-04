@@ -1,19 +1,31 @@
-import { BatteryCharging, MapPin, Thermometer, Wind } from 'lucide-react'
+import { AlertTriangle, BatteryCharging, MapPin, Thermometer, Wind } from 'lucide-react'
 import Badge, { stateToneMap } from '../common/Badge'
+import Button from '../common/Button'
 import LiveDot from '../common/LiveDot'
 import { degreesToCompass, formatMetric, isAnomalous, timeAgo } from '../../utils/formatters'
 
-export default function StationCard({ station, onClick }) {
+export default function StationCard({ station, onClick, onControl }) {
   const tone = stateToneMap[station.state] || 'neutral'
   const isOffline = !station.online || station.state === 'Shutdown'
   const anomalousTemp = isAnomalous('airTemperature', station.metrics.airTemperature.current)
+  const primaryWarning = station.warningReasons?.[0]
+  const showControl = !isOffline && station.hasWarning && onControl
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      onClick?.()
+    }
+  }
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={handleKeyDown}
       className={[
-        'group relative flex w-full flex-col overflow-hidden rounded-xl border bg-bg-surface text-start transition-all focus-ring',
+        'group relative flex w-full cursor-pointer flex-col overflow-hidden rounded-xl border bg-bg-surface text-start transition-all focus-ring',
         isOffline
           ? 'border-accent-danger/20 hover:border-accent-danger/40'
           : station.hasWarning
@@ -74,6 +86,30 @@ export default function StationCard({ station, onClick }) {
         />
       </div>
 
+      {primaryWarning && !isOffline && (
+        <div className="mx-4 mb-3 rounded-md border border-accent-warning/25 bg-accent-warningSoft px-2 py-1.5 text-xs text-accent-warning">
+          <div className="flex items-center gap-1.5">
+            <AlertTriangle size={13} />
+            <span className="truncate">
+              {primaryWarning.label}: {primaryWarning.detail}
+            </span>
+          </div>
+          {showControl && (
+            <Button
+              size="xs"
+              variant="secondary"
+              className="mt-2 w-full"
+              onClick={(event) => {
+                event.stopPropagation()
+                onControl?.()
+              }}
+            >
+              Control Panel
+            </Button>
+          )}
+        </div>
+      )}
+
       <div className="mt-auto flex items-center justify-between border-t border-bg-border bg-bg-base/40 px-4 py-2 text-[11px] text-text-muted">
         <span className="inline-flex items-center gap-1">
           <BatteryCharging size={12} />
@@ -81,7 +117,7 @@ export default function StationCard({ station, onClick }) {
         </span>
         <span className="metric-value">updated {timeAgo(station.lastSync)}</span>
       </div>
-    </button>
+    </div>
   )
 }
 

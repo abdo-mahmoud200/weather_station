@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-009",
+  "stationName": "Wadi Feiran",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-005",
+  "stationName": "Wadi El-Gamal",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-labelledby="title desc">
+  <title id="title">Wilderness Weather Stations logo</title>
+  <desc id="desc">Circular mountain and fog mark in green, slate, and blue gray.</desc>
+  <defs>
+    <clipPath id="circleClip">
+      <circle cx="200" cy="200" r="196" />
+    </clipPath>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#111820" flood-opacity=".55" />
+    </filter>
+  </defs>
+  <circle cx="200" cy="200" r="196" fill="#42ae83" filter="url(#shadow)" />
+  <g clip-path="url(#circleClip)">
+    <path fill="#2b343d" d="M35 205 107 82c6.5-11 22.5-11 29 0l57 96 22-39c6.5-11.5 23-11.5 29.5 0L287 207h113v28H237c-8.5 0-15.5-7-15.5-15.5v-1.5c0-6-5-11-11-11h-83c-8.5 0-15.5 7-15.5 15.5v3c0 8.5-7 15.5-15.5 15.5S81 234 81 225.5v-3c0-8.5-7-15.5-15.5-15.5H35Z" />
+    <path fill="#687987" d="M0 207h68c8.5 0 15.5 7 15.5 15.5v3c0 8.5 7 15.5 15.5 15.5s15.5-7 15.5-15.5v-3c0-8.5 7-15.5 15.5-15.5h80c8.5 0 15.5 7 15.5 15.5v3c0 8.5 7 15.5 15.5 15.5H400v159H0Z" />
+    <path fill="#2b343d" d="M105 262h60c7.5 0 13.5 6 13.5 13.5S172.5 289 165 289h-60c-7.5 0-13.5-6-13.5-13.5S97.5 262 105 262Zm127 0h99c7.5 0 13.5 6 13.5 13.5S338.5 289 331 289h-55c0 7.5-6 13.5-13.5 13.5S249 296.5 249 289h-17c-7.5 0-13.5-6-13.5-13.5S224.5 262 232 262ZM104 315h37c7.5 0 13.5 6 13.5 13.5S148.5 342 141 342h-37c-7.5 0-13.5-6-13.5-13.5S96.5 315 104 315Zm50 0h62c7.5 0 13.5 6 13.5 13.5v1c0 7.5 6 13.5 13.5 13.5h70c7.5 0 13.5 6 13.5 13.5S320.5 370 313 370h-88c-7.5 0-13.5-6-13.5-13.5v-1c0-7.5-6-13.5-13.5-13.5h-44c-7.5 0-13.5-6-13.5-13.5S146.5 315 154 315Z" />
+    <path fill="#2b343d" d="M101 289h3c7.5 0 13.5 6 13.5 13.5S111.5 316 104 316h-3c-7.5 0-13.5-6-13.5-13.5S93.5 289 101 289Z" />
+  </g>
+</svg>

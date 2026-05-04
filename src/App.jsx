@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { ToastProvider } from './components/common/Toast'
 import ErrorBoundary from './components/common/ErrorBoundary'
 import { AuthProvider } from './components/auth/AuthProvider'
@@ -12,6 +12,7 @@ import Preferences from './pages/Preferences'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import StationManagement from './pages/StationManagement'
+import LiveEventBridge from './components/realtime/LiveEventBridge'
 
 export default function App() {
   return (
@@ -28,14 +29,23 @@ export default function App() {
               }
             />
             <Route element={<RequireAuth />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/stations/:id" element={<StationDetail />} />
-              <Route path="/stations/:id/control" element={<ControlPanel />} />
-              <Route path="/stations/manage" element={<StationManagement />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/alerts" element={<Alerts />} />
-              <Route path="/preferences" element={<Preferences />} />
-              <Route path="/profile" element={<Profile />} />
+              <Route
+                element={
+                  <>
+                    <LiveEventBridge />
+                    <Outlet />
+                  </>
+                }
+              >
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/stations/:id" element={<StationDetail />} />
+                <Route path="/stations/:id/control" element={<ControlPanel />} />
+                <Route path="/stations/manage" element={<StationManagement />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/alerts" element={<Alerts />} />
+                <Route path="/preferences" element={<Preferences />} />
+                <Route path="/profile" element={<Profile />} />
+              </Route>
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

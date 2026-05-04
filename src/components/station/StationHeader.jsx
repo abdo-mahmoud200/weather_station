@@ -127,11 +127,11 @@ function getTelemetryProgress(station) {
     }
   }
 
-  if (station.state === 'Summarizing') {
+  if (station.state === 'Collecting') {
     return {
-      label: 'Station is summarizing the latest collection interval.',
-      note: 'Aggregation stage',
-      tone: 'warning',
+      label: 'Sensors are sampling the current observation window.',
+      note: 'Collection in progress',
+      tone: 'info',
       value: Math.max(55, freshness),
     }
   }
@@ -142,6 +142,15 @@ function getTelemetryProgress(station) {
       note: 'Configuring firmware',
       tone: 'warning',
       value: 68,
+    }
+  }
+
+  if (station.state === 'Controlled') {
+    return {
+      label: 'Operator has direct remote control. Routine telemetry is paused.',
+      note: 'Remote control active',
+      tone: 'warning',
+      value: 50,
     }
   }
 

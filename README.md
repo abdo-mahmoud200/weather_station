@@ -1,14 +1,15 @@
-# Wilderness Weather Stations Monitoring Dashboard
+# Wilderness Weather Stations Monitoring System
 
-A production-ready React frontend for a government monitoring system that tracks remote wilderness weather stations collecting temperature, pressure, wind, and rainfall telemetry every 5 minutes.
+React + Node.js monitoring system for new Egyptian wilderness weather stations in remote and under-covered areas. The frontend connects to a live Express/TypeScript backend that simulates station telemetry, stores readings in SQLite, emits Socket.io updates, and supports operational commands.
 
 ## Features
 
-- Operations dashboard with live status cards, searchable station registry, status filtering, and auto-refresh every 30 seconds
+- Operations dashboard with live status cards, Egypt station map, Khamaseen watch, searchable station registry, status filtering, and realtime Socket.io refresh
 - Station detail view with real-time metric cards, wind compass, instrument health, and 24-hour / 7-day charts
 - Station control panel with typed confirmation for dangerous actions, remote instrument commands, firmware upload, progress tracking, and update history
 - Reports page with preview generation and export to CSV, JSON, or PDF
-- Alerts feed plus full activity log with filtering, acknowledgement, and resolution workflows
+- Alerts feed plus full activity log with filtering and acknowledgement workflows
+- Live toasts for alerts, station status changes, Khamaseen events, station additions, and removals
 - Toasts, skeleton loading states, empty states, anomaly highlighting, and responsive collapsible navigation
 
 ## Tech Stack
@@ -18,7 +19,10 @@ A production-ready React frontend for a government monitoring system that tracks
 - Tailwind CSS 3
 - Recharts
 - Lucide React
-- Fetch API through a dedicated `services` layer
+- Socket.io client
+- Fetch API through a dedicated backend adapter
+- Node.js + Express + TypeScript backend in `weather-backend/`
+- better-sqlite3 SQLite storage
 
 ## Getting Started
 
@@ -32,7 +36,15 @@ npm run lint
 
 Open `http://localhost:5173`.
 
-Routing uses `HashRouter`, so static deployments can open deep app views safely without server-side route rewrites.
+The frontend expects the backend at `http://localhost:3001`. Copy `.env.example` to `.env` if you need a different API host.
+
+Start the backend:
+
+```bash
+cd weather-backend
+npm install
+npm run dev
+```
 
 ## Project Structure
 
@@ -52,7 +64,9 @@ src/
       Skeleton.jsx
       Toast.jsx
     dashboard/
+      EgyptStationMap.jsx
       MetricCard.jsx
+      OperationsPanel.jsx
       StationCard.jsx
       StationList.jsx
       StatsBar.jsx
@@ -75,10 +89,11 @@ src/
     StationDetail.jsx
   services/
     api.js
-    mockData.js
+    socket.js
   hooks/
     useAutoRefresh.js
     useNowTicker.js
+    useSocket.js
     useStations.js
     useWeatherData.js
   utils/
@@ -86,23 +101,16 @@ src/
     validators.js
 ```
 
-## Mock Backend Behavior
+## Backend
 
-The frontend currently runs against an in-memory mock service:
+The backend lives in `weather-backend/` and exposes:
 
-- station commands mutate station state
-- remote commands are logged into the activity feed
-- firmware uploads update version history and station metadata
-- alerts and activity remain available through the same service interface that a real backend will use later
+- `GET /api/stations`
+- `GET /api/stations/:id`
+- `GET /api/stations/:id/readings`
+- `GET /api/stats/summary`
+- `GET /api/alerts`
+- `POST /api/stations/:id/command`
+- Socket.io events such as `reading:new`, `alert:new`, `status:changed`, and `khamaseen:started`
 
-This keeps the UI realistic now while preserving a clean migration path to real APIs.
-
-## Switching to a Real Backend
-
-All data access is centralized in `src/services/api.js`.
-
-1. Set `USE_MOCK = false` in `src/services/api.js`
-2. Provide `VITE_API_BASE` in your environment
-3. Implement matching backend endpoints for stations, alerts, activity, reports, commands, and software uploads
-
-No page-level or component-level API calls need to change.
+Full backend details are in `weather-backend/README.md`.

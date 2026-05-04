@@ -1,579 +1,553 @@
 /**
- * Thin service layer over the mock data.
+ * Backend API adapter.
  *
- * Every function returns a Promise so that swapping the implementation
- * with a real HTTP client (fetch / axios) later is a drop-in change
- * in this single file. Consumers of the API do not need to know whether
- * data is coming from the mock layer or from a backend.
- *
- * To go live, set VITE_API_BASE and flip USE_MOCK to false.
+ * The React UI was originally built around a richer frontend station shape.
+ * The Node backend returns normalized database rows, so this file translates
+ * backend responses into the shape the existing components already render.
  */
 
-import {
-  MOCK_ACTIVITY,
-  MOCK_ALERTS,
-  MOCK_STATIONS,
-  generateRainfall7d,
-  generateSeries,
-  mockUpdateHistory,
-} from './mockData'
+import { clearStoredSession, getAuthToken } from './auth'
 
-const USE_MOCK = true
-const API_BASE = import.meta.env.VITE_API_BASE || ''
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
 
-const delay = (ms = 180) => new Promise((resolve) => setTimeout(resolve, ms))
-const clone = (value) => structuredClone(value)
+const STATUS_LABELS = {
+  RUNNING: 'Running',
+  COLLECTING: 'Collecting',
+  TRANSMITTING: 'Transmitting',
+  POWERSAVE: 'Powersave',
+  CONFIGURING: 'Configuring',
+  CONTROLLED: 'Controlled',
+  SHUTDOWN: 'Shutdown',
+}
 
-const stationStore = clone(MOCK_STATIONS)
-const alertStore = clone(MOCK_ALERTS)
-const activityStore = clone(MOCK_ACTIVITY)
-const updateHistoryStore = Object.fromEntries(
-  stationStore.map((station) => [station.id, mockUpdateHistory(station.id)]),
-)
+const COMPASS_TO_DEGREES = {
+  N: 0,
+  NE: 45,
+  E: 90,
+  SE: 135,
+  S: 180,
+  SW: 225,
+  W: 270,
+  NW: 315,
+}
 
-let activitySeq = 2000 + activityStore.length
-
-async function httpGet(path) {
+async function request(path, options = {}) {
+  const token = getAuthToken()
   const response = await fetch(`${API_BASE}${path}`, {
-    headers: { Accept: 'application/json' },
-    credentials: 'same-origin',
+    ...options,
+    headers: {
+      Accept: 'application/json',
+      ...(options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
   })
-  if (!response.ok) throw new Error(`GET ${path} failed: ${response.status}`)
+
+  if (response.status === 401) {
+    clearStoredSession()
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+      window.location.assign('/login')
+    }
+    throw new Error('Session expired. Please sign in again.')
+  }
+
+  if (!response.ok) {
+    let message = `${options.method || 'GET'} ${path} failed: ${response.status}`
+    try {
+      const body = await response.json()
+      if (body?.error) message = body.error
+    } catch {
+      // Keep the status-based message when the response body is not JSON.
+    }
+    throw new Error(message)
+  }
+
+  if (response.status === 204) return null
   return response.json()
 }
 
-async function httpPost(path, body) {
-  const response = await fetch(`${API_BASE}${path}`, {
+const httpGet = (path) => request(path)
+const httpPost = (path, body) =>
+  request(path, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    credentials: 'same-origin',
-    body: JSON.stringify(body),
+    body: JSON.stringify(body ?? {}),
   })
-  if (!response.ok) throw new Error(`POST ${path} failed: ${response.status}`)
-  return response.json()
-}
+const httpPut = (path, body) =>
+  request(path, {
+    method: 'PUT',
+    body: JSON.stringify(body ?? {}),
+  })
+const httpPatch = (path, body) =>
+  request(path, {
+    method: 'PATCH',
+    body: JSON.stringify(body ?? {}),
+  })
+const httpDelete = (path) =>
+  request(path, {
+    method: 'DELETE',
+  })
 
 export async function fetchStations() {
-  if (!USE_MOCK) return httpGet('/api/stations')
-  await delay(120)
-  return stationStore.filter((station) => !station.archivedAt).map((station) => clone(station))
+  const stations = await httpGet('/api/stations')
+  return stations.map(mapStation)
 }
 
 export async function fetchStation(id) {
-  if (!USE_MOCK) return httpGet(`/api/stations/${id}`)
-  await delay(120)
-  const station = getStation(id)
-  if (!station || station.archivedAt) throw new Error(`Station not found: ${id}`)
-  return clone(station)
+  const station = await httpGet(`/api/stations/${encodeURIComponent(id)}`)
+  return mapStation(station)
 }
 
 export async function fetchStationRegistry() {
-  if (!USE_MOCK) return httpGet('/api/stations/registry')
-  await delay(140)
-  return stationStore
-    .slice()
-    .sort((a, b) => {
-      if (a.archivedAt && !b.archivedAt) return 1
-      if (!a.archivedAt && b.archivedAt) return -1
-      return a.id.localeCompare(b.id)
-    })
-    .map((station) => clone(station))
+  const stations = await httpGet('/api/stations/registry')
+  return stations.map(mapStation)
 }
 
 export async function fetchStationSeries(id, metric, hours = 24) {
-  if (!USE_MOCK) return httpGet(`/api/stations/${id}/series?metric=${metric}&hours=${hours}`)
-  await delay(80)
-
-  const station = getStation(id)
-  const series = generateSeries(id, metric, hours)
-  const currentValue = station?.metrics?.[metric]?.current
-
-  if (typeof currentValue !== 'number' || series.length === 0) return series
-
-  const offset = currentValue - series[series.length - 1].value
-  return series.map((point) => ({
-    ...point,
-    value: +(point.value + offset).toFixed(2),
-  }))
+  const params = new URLSearchParams({ metric, hours: String(hours) })
+  return httpGet(`/api/stations/${encodeURIComponent(id)}/series?${params.toString()}`)
 }
 
 export async function fetchRainfall7d(id) {
-  if (!USE_MOCK) return httpGet(`/api/stations/${id}/rainfall`)
-  await delay(80)
-
-  const station = getStation(id)
-  const rainfall = generateRainfall7d(id)
-  const targetTotal = station?.metrics?.rainfall?.total7d
-
-  if (typeof targetTotal !== 'number' || rainfall.length === 0) return rainfall
-
-  const rawTotal = rainfall.reduce((sum, point) => sum + point.value, 0)
-  if (rawTotal === 0) return rainfall
-
-  const scaled = rainfall.map((point) => ({
-    ...point,
-    value: +((point.value / rawTotal) * targetTotal).toFixed(2),
-  }))
-
-  const scaledTotal = scaled.reduce((sum, point) => sum + point.value, 0)
-  scaled[scaled.length - 1].value = +(scaled[scaled.length - 1].value + targetTotal - scaledTotal).toFixed(2)
-
-  return scaled
+  return httpGet(`/api/stations/${encodeURIComponent(id)}/rainfall`)
 }
 
 export async function fetchUpdateHistory(id) {
-  if (!USE_MOCK) return httpGet(`/api/stations/${id}/updates`)
-  await delay(80)
-  return clone(updateHistoryStore[id] || [])
+  return httpGet(`/api/stations/${encodeURIComponent(id)}/updates`)
 }
 
 export async function createStation(payload) {
-  if (!USE_MOCK) return httpPost('/api/stations', payload)
-  await delay(260)
-
-  const stationId = String(payload.id || '').trim().toUpperCase()
-  if (!stationId) throw new Error('Station ID is required.')
-  if (getStation(stationId, { includeArchived: true })) {
-    throw new Error(`Station ${stationId} already exists.`)
-  }
-
-  const station = buildStationRecord({
-    ...payload,
-    id: stationId,
+  const station = await httpPost('/api/stations', {
+    name: payload.name,
+    name_ar: payload.name_ar || payload.nameAr || payload.name,
+    region: payload.region,
+    lat: Number(payload.lat),
+    lng: Number(payload.lng ?? payload.lon),
+    elevation: Number(payload.elevation) || 0,
+    notes: payload.notes || '',
+    initialState: payload.initialState || 'Running',
   })
+  return mapStation(station)
+}
 
-  stationStore.unshift(station)
-  updateHistoryStore[station.id] = []
-
-  prependActivity({
-    station,
-    type: 'system.station.registered',
-    actor: 'operator@wws',
-    message: `${station.id} registered for remote monitoring.`,
-    timestamp: station.lastSync,
+export async function updateStation(id, payload) {
+  const station = await httpPut(`/api/stations/${encodeURIComponent(id)}`, {
+    name: payload.name,
+    name_ar: payload.name_ar || payload.nameAr || payload.name,
+    region: payload.region,
+    lat: Number(payload.lat),
+    lng: Number(payload.lng ?? payload.lon),
+    elevation: Number(payload.elevation) || 0,
+    notes: payload.notes || '',
   })
-
-  return clone(station)
+  return mapStation(station)
 }
 
 export async function decommissionStation(id) {
-  if (!USE_MOCK) return httpPost(`/api/stations/${id}/decommission`, {})
-  await delay(240)
-
-  const station = getStation(id, { includeArchived: true })
-  if (!station) throw new Error(`Station not found: ${id}`)
-  if (station.archivedAt) throw new Error(`Station ${id} is already archived.`)
-
-  const timestamp = new Date().toISOString()
-  station.archivedAt = timestamp
-  station.state = 'Shutdown'
-  station.online = false
-  station.lastSync = timestamp
-  hydrateStation(station)
-
-  prependActivity({
-    station,
-    type: 'system.station.decommissioned',
-    actor: 'operator@wws',
-    message: `${station.id} removed from active monitoring and archived in the registry.`,
-    timestamp,
-  })
-
-  return clone(station)
+  return httpDelete(`/api/stations/${encodeURIComponent(id)}`)
 }
 
 export async function sendStationCommand(id, command, payload = {}) {
-  if (!USE_MOCK) return httpPost(`/api/stations/${id}/commands`, { command, ...payload })
-  await delay(420)
-
-  const station = getStation(id)
-  if (!station) throw new Error(`Station not found: ${id}`)
-
-  const timestamp = new Date().toISOString()
-
-  if (command === 'restart') {
-    station.state = 'Running'
-    station.battery = Math.max(12, station.battery - 1)
-    station.lastSync = timestamp
-    hydrateStation(station)
-    prependActivity({
-      station,
-      type: 'command.restart',
-      actor: 'operator@wws',
-      message: `Restart command issued to ${station.id}. Telemetry should resume within 30 seconds.`,
-      timestamp,
-    })
-  }
-
-  if (command === 'shutdown') {
-    station.state = 'Shutdown'
-    station.lastSync = timestamp
-    hydrateStation(station)
-    prependActivity({
-      station,
-      type: 'command.shutdown',
-      actor: 'operator@wws',
-      message: `Shutdown command issued to ${station.id}. Station moved to safe standby.`,
-      timestamp,
-    })
-  }
-
-  if (command === 'powersave') {
-    station.state = station.state === 'Powersave' ? 'Running' : 'Powersave'
-    station.battery = Math.min(100, Math.max(10, station.battery + (station.state === 'Powersave' ? 2 : -1)))
-    station.lastSync = timestamp
-    hydrateStation(station)
-    prependActivity({
-      station,
-      type: 'command.powersave',
-      actor: 'operator@wws',
-      message:
-        station.state === 'Powersave'
-          ? `Power-save mode enabled on ${station.id}. Non-essential sensors are throttled.`
-          : `Power-save mode disabled on ${station.id}. Full telemetry cadence restored.`,
-      timestamp,
-    })
-  }
-
-  if (command === 'remote') {
-    station.state = 'Controlled'
-    station.lastSync = timestamp
-    hydrateStation(station)
-    prependActivity({
-      station,
-      type: 'command.remote',
-      actor: 'operator@wws',
-      message: buildRemoteActivityMessage(station, payload),
-      timestamp,
-    })
-
-    return {
-      ok: true,
-      command,
-      stationId: id,
-      response: buildRemoteResponse(station, payload, timestamp),
-      station: clone(station),
-      timestamp,
-    }
-  }
-
-  return {
-    ok: true,
+  const body = {
+    ...payload,
     command,
-    stationId: id,
-    message: `${command} acknowledged.`,
-    station: clone(station),
-    timestamp,
+  }
+
+  if (command === 'remote' && payload.command && !payload.action) {
+    body.action = payload.command
+  }
+
+  const response = await httpPost(`/api/stations/${encodeURIComponent(id)}/command`, body)
+  return {
+    ...response,
+    station: response.station ? mapStation(response.station) : undefined,
   }
 }
 
 export async function uploadSoftware(id, file, onProgress) {
-  if (!USE_MOCK) {
-    const form = new FormData()
-    form.append('file', file)
-    const response = await fetch(`${API_BASE}/api/stations/${id}/software`, {
-      method: 'POST',
-      body: form,
-    })
-    if (!response.ok) throw new Error(`Upload failed: ${response.status}`)
-    return response.json()
-  }
+  const fileName = file?.name || 'firmware.bin'
+  const token = getAuthToken()
 
-  return new Promise((resolve, reject) => {
-    const station = getStation(id)
-    if (!station) {
-      reject(new Error(`Station not found: ${id}`))
-      return
+  const response = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${API_BASE}/api/stations/${encodeURIComponent(id)}/software`)
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+    xhr.setRequestHeader('Accept', 'application/json')
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || typeof onProgress !== 'function') return
+      onProgress(Math.round((event.loaded / event.total) * 100))
     }
 
-    station.state = 'Configuring'
-    hydrateStation(station)
-
-    let progress = 0
-    const intervalId = setInterval(() => {
-      progress = Math.min(100, progress + 8 + Math.random() * 14)
-      onProgress?.(Math.floor(progress))
-
-      if (progress >= 100) {
-        clearInterval(intervalId)
-
-        const installedAt = new Date().toISOString()
-        const version = bumpVersion(station.softwareVersion)
-
-        station.state = 'Running'
-        station.softwareVersion = version
-        station.lastSync = installedAt
-        hydrateStation(station)
-
-        updateHistoryStore[id] = [
-          {
-            version,
-            installedAt,
-            status: 'success',
-            notes: `Uploaded ${file?.name || 'update.bin'}.`,
-          },
-          ...(updateHistoryStore[id] || []),
-        ]
-
-        prependActivity({
-          station,
-          type: 'system.firmware.update',
-          actor: 'operator@wws',
-          message: `Firmware updated on ${station.id} to ${version}.`,
-          timestamp: installedAt,
-        })
-
-        resolve({
-          ok: true,
-          stationId: id,
-          fileName: file?.name || 'update.bin',
-          installedAt,
-          version,
-          station: clone(station),
-        })
+    xhr.onload = () => {
+      try {
+        const body = xhr.responseText ? JSON.parse(xhr.responseText) : {}
+        if (xhr.status >= 200 && xhr.status < 300) {
+          onProgress?.(100)
+          resolve(body)
+          return
+        }
+        reject(new Error(body?.error || `Upload failed: ${xhr.status}`))
+      } catch (error) {
+        reject(error)
       }
-    }, 220)
+    }
+
+    xhr.onerror = () => reject(new Error('Network error during upload.'))
+    xhr.onabort = () => reject(new Error('Upload aborted.'))
+
+    const formData = new FormData()
+    if (file) formData.append('file', file, fileName)
+    formData.append('fileName', fileName)
+    xhr.send(formData)
   })
+
+  const station = response.station ? mapStation(response.station) : null
+  return {
+    ok: true,
+    stationId: id,
+    fileName,
+    installedAt: response.timestamp || new Date().toISOString(),
+    version: station?.softwareVersion || response.station?.software_version || '1.0.0',
+    bytesUploaded: response.bytesUploaded ?? 0,
+    station,
+  }
 }
 
 export async function fetchAlerts() {
-  if (!USE_MOCK) return httpGet('/api/alerts')
-  await delay(100)
-  return clone(alertStore)
+  const alerts = await httpGet('/api/alerts')
+  return alerts.map(mapAlert)
 }
 
 export async function updateAlertStatus(alertId, status) {
-  if (!USE_MOCK) return httpPost(`/api/alerts/${alertId}/status`, { status })
-  await delay(140)
-  const alert = alertStore.find((item) => item.id === alertId)
-  if (alert) alert.status = status
-  return { ok: true, alertId, status }
+  if (status === 'new') {
+    return { ok: true, alertId, status }
+  }
+
+  const alert = await httpPatch(`/api/alerts/${encodeURIComponent(alertId)}/acknowledge`, {})
+  return { ok: true, alertId, status, alert: mapAlert(alert) }
 }
 
 export async function fetchActivity() {
-  if (!USE_MOCK) return httpGet('/api/activity')
-  await delay(100)
-  return clone(activityStore)
+  return httpGet('/api/activity')
+}
+
+export async function fetchStatsSummary() {
+  return httpGet('/api/stats/summary')
 }
 
 export async function fetchReportData({ stationIds, types, from, to }) {
-  if (!USE_MOCK) {
-    return httpPost('/api/reports/preview', { stationIds, types, from, to })
-  }
+  const rowsByStation = await Promise.all(
+    stationIds.map(async (stationId) => {
+      const [station, readings] = await Promise.all([
+        fetchStation(stationId),
+        httpGet(
+          `/api/stations/${encodeURIComponent(stationId)}/readings?${new URLSearchParams({
+            limit: '1000',
+            from,
+            to,
+          }).toString()}`,
+        ),
+      ])
 
-  await delay(200)
-
-  const rows = []
-
-  for (const id of stationIds) {
-    const station = getStation(id)
-    if (!station) continue
-
-    const start = new Date(from).getTime()
-    const end = new Date(to).getTime()
-
-    for (let timestamp = start; timestamp <= end; timestamp += 3600 * 1000) {
-      const row = {
-        timestamp: new Date(timestamp).toISOString(),
-        stationId: station.id,
-        stationName: station.name,
-      }
-
-      if (types.includes('temperature')) {
-        row.airTemperature = +(station.metrics.airTemperature.current + valueNoise(id, timestamp, 'air', 3)).toFixed(1)
-      }
-
-      if (types.includes('pressure')) {
-        row.pressure = +(station.metrics.pressure.current + valueNoise(id, timestamp, 'pressure', 2)).toFixed(1)
-      }
-
-      if (types.includes('wind')) {
-        row.windSpeed = Math.max(
-          0,
-          +(station.metrics.windSpeed.current + valueNoise(id, timestamp, 'wind', 3)).toFixed(1),
-        )
-        row.windDirection = normalizeBearing(
-          station.metrics.windDirection.current + Math.round(valueNoise(id, timestamp, 'bearing', 80)),
-        )
-      }
-
-      if (types.includes('rainfall')) {
-        row.rainfall = Math.max(0, +(Math.abs(valueNoise(id, timestamp, 'rain', 1.1))).toFixed(2))
-      }
-
-      rows.push(row)
-    }
-  }
-
-  return rows
-}
-
-function getStation(id, { includeArchived = false } = {}) {
-  return stationStore.find(
-    (station) => station.id === id && (includeArchived || !station.archivedAt),
+      return readings.map((reading) => mapReportRow(station, reading, types))
+    }),
   )
+
+  return rowsByStation
+    .flat()
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
 }
 
-function hydrateStation(station) {
-  station.online = station.state !== 'Shutdown'
-  station.hasWarning =
-    station.battery < 25 ||
-    station.state === 'Testing' ||
-    station.state === 'Configuring' ||
-    Object.values(station.instruments || {}).some((instrument) => instrument.status !== 'OK')
-}
+function mapStation(raw) {
+  const reading = raw.latest_reading || raw.latestReading || null
+  const status = raw.status || 'RUNNING'
+  const state = STATUS_LABELS[status] || toTitleCase(status)
+  const windDegrees = compassToDegrees(reading?.wind_direction)
+  const lastSync = reading?.timestamp || raw.installed_at || new Date().toISOString()
+  const battery = Number(reading?.battery ?? raw.battery ?? 0)
+  const signal = Number(reading?.signal ?? raw.signal ?? 0)
+  const active = Number(raw.active ?? 1) === 1
+  const online = active && state !== 'Shutdown'
+  const activeAlerts = Number(raw.active_alerts_count ?? raw.activeAlertsCount ?? 0)
 
-function prependActivity({ station, type, actor, message, timestamp }) {
-  activityStore.unshift({
-    id: `EV-${activitySeq++}`,
-    stationId: station.id,
-    stationName: station.name,
-    type,
-    actor,
-    message,
-    timestamp,
+  const airTemp = numeric(reading?.air_temp, null)
+  const groundTemp = numeric(reading?.ground_temp, airTemp === null ? null : airTemp + 2)
+  const pressure = numeric(reading?.pressure, null)
+  const windSpeed = numeric(reading?.wind_speed, null)
+  const rainfall = numeric(reading?.rainfall, 0)
+  const instruments = buildInstruments({ airTemp, groundTemp, pressure, windSpeed })
+  const warningReasons = buildWarningReasons({
+    activeAlerts,
+    battery,
+    signal,
+    airTemp,
+    groundTemp,
+    pressure,
+    windSpeed,
+    instruments,
   })
-}
 
-function buildRemoteActivityMessage(station, payload) {
-  const instrumentLabels = {
-    anemometer: 'anemometer',
-    barometer: 'barometer',
-    groundThermometer: 'ground thermometer',
-  }
-  const instrument = instrumentLabels[payload.instrument] || 'instrument'
-  return `Remote command "${payload.command}" sent to ${instrument} on ${station.id}.`
-}
-
-function buildRemoteResponse(station, payload, timestamp) {
-  if (!payload.instrument || !payload.command) return '> ERR missing parameters'
-
-  const body = {
-    anemometer: `OK: wind=${station.metrics.windSpeed.current.toFixed(1)} m/s bearing=${station.metrics.windDirection.current.toFixed(0)} deg`,
-    barometer: `OK: p=${station.metrics.pressure.current.toFixed(1)} hPa`,
-    groundThermometer: `OK: t=${station.metrics.groundTemperature.current.toFixed(1)} C`,
-  }[payload.instrument] || 'OK'
-
-  return `[${timestamp}] -> ${payload.instrument}.${payload.command}\n[${timestamp}] <- ${body}`
-}
-
-function bumpVersion(version) {
-  const parts = String(version || '4.5.1')
-    .split('.')
-    .map((part) => Number.parseInt(part, 10))
-
-  while (parts.length < 3) parts.push(0)
-  parts[2] += 1
-
-  return parts.join('.')
-}
-
-function valueNoise(id, timestamp, channel, amplitude) {
-  const seed = `${id}:${timestamp}:${channel}`
-  let hash = 0
-  for (let index = 0; index < seed.length; index += 1) {
-    hash = (hash * 31 + seed.charCodeAt(index)) | 0
-  }
-  const normalized = (Math.sin(hash) + Math.cos(hash / 2)) / 2
-  return normalized * amplitude
-}
-
-function normalizeBearing(value) {
-  return ((value % 360) + 360) % 360
-}
-
-function buildStationRecord(payload) {
-  const timestamp = new Date().toISOString()
-  const lat = Number(payload.lat)
-  const lon = Number(payload.lon)
-  const elevation = Number(payload.elevation) || 0
-  const state = payload.initialState || 'Running'
-  const thermalBias = Math.max(-8, Math.min(18, 18 - Math.abs(lat) / 4 - elevation / 800))
-  const airTemperature = +thermalBias.toFixed(1)
-  const groundTemperature = +(airTemperature - 1.2).toFixed(1)
-  const pressure = +(1012 - elevation / 120 + Math.abs(lon % 7)).toFixed(1)
-  const windSpeed = +(3 + Math.abs(lat % 6)).toFixed(1)
-  const windDirection = normalizeBearing((Math.abs(lat) + Math.abs(lon)) * 3)
-  const rainfall = +(Math.abs(lat % 4) * 0.6).toFixed(2)
-
-  const station = {
-    id: payload.id,
-    name: payload.name,
-    region: payload.region,
-    coordinates: { lat, lon },
-    elevation,
+  return {
+    id: raw.id,
+    name: raw.name,
+    nameAr: raw.name_ar,
+    region: raw.region,
+    coordinates: {
+      lat: Number(raw.lat),
+      lon: Number(raw.lng),
+    },
+    elevation: Number(raw.elevation || 0),
     state,
-    online: state !== 'Shutdown',
-    hasWarning: false,
-    battery: 100,
-    softwareVersion: '5.0.0',
-    lastSync: timestamp,
-    notes: payload.notes || '',
+    online,
+    hasWarning: online && warningReasons.length > 0,
+    warningReasons,
+    activeAlerts,
+    battery: Math.round(battery),
+    signal: Math.round(signal),
+    softwareVersion: raw.software_version || raw.softwareVersion || '1.0.0',
+    lastSync,
+    notes: raw.notes || '',
+    archivedAt: active ? null : raw.decommissioned_at || raw.installed_at || lastSync,
     metrics: {
-      airTemperature: {
-        current: airTemperature,
-        min: +(airTemperature - 3.1).toFixed(1),
-        max: +(airTemperature + 4.4).toFixed(1),
-        avg: +(airTemperature - 0.3).toFixed(1),
-        unit: 'deg C',
-        trend: 'up',
-      },
-      groundTemperature: {
-        current: groundTemperature,
-        min: +(groundTemperature - 2.2).toFixed(1),
-        max: +(groundTemperature + 2.8).toFixed(1),
-        avg: +(groundTemperature - 0.1).toFixed(1),
-        unit: 'deg C',
-        trend: 'down',
-      },
-      pressure: {
-        current: pressure,
-        min: +(pressure - 5.4).toFixed(1),
-        max: +(pressure + 4.8).toFixed(1),
-        avg: +(pressure - 0.3).toFixed(1),
-        unit: 'hPa',
-        trend: 'up',
-      },
-      windSpeed: {
-        current: windSpeed,
-        min: +(Math.max(0, windSpeed - 1.8)).toFixed(1),
-        max: +(windSpeed + 5.1).toFixed(1),
-        avg: +(windSpeed + 0.7).toFixed(1),
-        unit: 'm/s',
-        trend: 'up',
-      },
+      airTemperature: metricSummary(airTemp, 'deg C', 3.5),
+      groundTemperature: metricSummary(groundTemp, 'deg C', 3),
+      pressure: metricSummary(pressure, 'hPa', 4),
+      windSpeed: metricSummary(windSpeed, 'm/s', 4),
       windDirection: {
-        current: windDirection,
+        current: windDegrees,
         unit: 'deg',
       },
       rainfall: {
         total24h: rainfall,
-        total7d: +(rainfall * 3.6).toFixed(2),
+        total7d: null,
         unit: 'mm',
       },
     },
-    instruments: {
-      groundThermometer: {
-        name: 'Ground Thermometer',
-        status: 'OK',
-        lastReading: groundTemperature,
-        unit: 'deg C',
-      },
-      anemometer: {
-        name: 'Anemometer',
-        status: 'OK',
-        lastReading: windSpeed,
-        unit: 'm/s',
-      },
-      barometer: {
-        name: 'Barometer',
-        status: 'OK',
-        lastReading: pressure,
-        unit: 'hPa',
-      },
-    },
+    instruments,
+  }
+}
+
+function mapAlert(raw) {
+  return {
+    ...raw,
+    stationId: raw.stationId || raw.station_id,
+    stationName: raw.stationName || raw.station_name,
+    status: raw.status || (raw.acknowledged ? 'acknowledged' : 'new'),
+  }
+}
+
+function mapReportRow(station, reading, types) {
+  const row = {
+    timestamp: reading.timestamp,
+    stationId: station.id,
+    stationName: station.name,
   }
 
-  hydrateStation(station)
-  return station
+  if (types.includes('temperature')) {
+    row.airTemperature = reading.air_temp
+    row.groundTemperature = reading.ground_temp
+    row.humidity = reading.humidity
+  }
+
+  if (types.includes('pressure')) {
+    row.pressure = reading.pressure
+  }
+
+  if (types.includes('wind')) {
+    row.windSpeed = reading.wind_speed
+    row.windDirection = reading.wind_direction
+  }
+
+  if (types.includes('rainfall')) {
+    row.rainfall = reading.rainfall
+    row.sunshine = reading.sunshine
+  }
+
+  return row
 }
+
+function buildInstruments({ groundTemp, pressure, windSpeed }) {
+  const hasGroundTemp = Number.isFinite(Number(groundTemp))
+  const hasPressure = Number.isFinite(Number(pressure))
+  const hasWindSpeed = Number.isFinite(Number(windSpeed))
+
+  return {
+    groundThermometer: {
+      name: 'Ground Thermometer',
+      status: hasGroundTemp && (groundTemp > 50 || groundTemp < -10) ? 'Warning' : 'OK',
+      lastReading: groundTemp,
+      unit: 'deg C',
+    },
+    anemometer: {
+      name: 'Anemometer',
+      status: hasWindSpeed && windSpeed > 25 ? 'Failed' : hasWindSpeed && windSpeed > 18 ? 'Warning' : 'OK',
+      lastReading: windSpeed,
+      unit: 'm/s',
+    },
+    barometer: {
+      name: 'Barometer',
+      status: hasPressure && (pressure < 980 || pressure > 1030) ? 'Warning' : 'OK',
+      lastReading: pressure,
+      unit: 'hPa',
+    },
+  }
+}
+
+function buildWarningReasons({
+  activeAlerts,
+  battery,
+  signal,
+  airTemp,
+  groundTemp,
+  pressure,
+  windSpeed,
+  instruments,
+}) {
+  const reasons = []
+
+  if (activeAlerts > 0) {
+    reasons.push({
+      code: 'active_alerts',
+      label: 'Active alerts',
+      detail: `${activeAlerts} unacknowledged alert${activeAlerts === 1 ? '' : 's'}`,
+      severity: activeAlerts > 2 ? 'critical' : 'warning',
+      action: { type: 'route', label: 'Review alerts', to: '/alerts' },
+    })
+  }
+
+  if (battery < 30) {
+    reasons.push({
+      code: 'battery_low',
+      label: battery < 15 ? 'Battery critical' : 'Battery low',
+      detail: `${Math.round(battery)}% battery`,
+      severity: battery < 15 ? 'critical' : 'warning',
+      action: {
+        type: 'command',
+        label: 'Enable powersave',
+        command: 'powersave',
+        payload: { enabled: true },
+      },
+    })
+  }
+
+  if (signal < 40) {
+    reasons.push({
+      code: 'signal_weak',
+      label: signal < 25 ? 'Signal lost' : 'Signal weak',
+      detail: `${Math.round(signal)}% signal`,
+      severity: signal < 25 ? 'critical' : 'warning',
+      action: {
+        type: 'command',
+        label: 'Stabilize link',
+        command: 'reconfigure',
+        payload: {
+          settings: {
+            readingIntervalSeconds: 60,
+            alertProfile: 'maintenance',
+            transmissionMode: 'low-power',
+          },
+        },
+      },
+    })
+  }
+
+  if (windSpeed > 18) {
+    reasons.push({
+      code: 'wind_strong',
+      label: windSpeed > 25 ? 'Storm wind' : 'Strong wind',
+      detail: `${windSpeed.toFixed(1)} m/s wind`,
+      severity: windSpeed > 25 ? 'critical' : 'warning',
+      action: {
+        type: 'command',
+        label: 'Apply storm watch',
+        command: 'reconfigure',
+        payload: {
+          settings: {
+            readingIntervalSeconds: 10,
+            alertProfile: 'desert-extreme',
+            transmissionMode: 'realtime',
+          },
+        },
+      },
+    })
+  }
+
+  if (airTemp > 45) {
+    reasons.push({
+      code: 'temperature_high',
+      label: airTemp > 50 ? 'Critical heat' : 'High temperature',
+      detail: `${airTemp.toFixed(1)} deg C air`,
+      severity: airTemp > 50 ? 'critical' : 'warning',
+      action: {
+        type: 'command',
+        label: 'Apply heat watch',
+        command: 'reconfigure',
+        payload: {
+          settings: {
+            readingIntervalSeconds: 10,
+            alertProfile: 'desert-extreme',
+            transmissionMode: 'realtime',
+          },
+        },
+      },
+    })
+  }
+
+  const groundOutOfRange = Number.isFinite(Number(groundTemp)) && (groundTemp > 50 || groundTemp < -10)
+  const pressureOutOfRange = Number.isFinite(Number(pressure)) && (pressure < 980 || pressure > 1030)
+
+  if (groundOutOfRange || pressureOutOfRange) {
+    const failing = Object.values(instruments || {}).find((instrument) => instrument.status !== 'OK')
+    if (failing) {
+      reasons.push({
+        code: 'instrument_check',
+        label: 'Hardware check',
+        detail: `${failing.name} reports ${failing.status}`,
+        severity: failing.status === 'Failed' ? 'critical' : 'warning',
+        hardware: true,
+      })
+    }
+  }
+
+  return reasons
+}
+
+function metricSummary(current, unit, spread) {
+  const value = numeric(current, null)
+  if (value === null) {
+    return {
+      current: null,
+      min: null,
+      max: null,
+      avg: null,
+      unit,
+      trend: 'flat',
+    }
+  }
+
+  return {
+    current: value,
+    min: Number((value - spread).toFixed(1)),
+    max: Number((value + spread).toFixed(1)),
+    avg: Number((value - spread / 5).toFixed(1)),
+    unit,
+    trend: Math.random() > 0.5 ? 'up' : 'down',
+  }
+}
+
+function compassToDegrees(direction) {
+  if (typeof direction === 'number') return direction
+  return COMPASS_TO_DEGREES[String(direction || '').toUpperCase()] ?? 0
+}
+
+function numeric(value, fallback) {
+  const number = Number(value)
+  return Number.isFinite(number) ? number : fallback
+}
+
+function toTitleCase(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/(^|_)([a-z])/g, (_match, prefix, letter) => `${prefix ? ' ' : ''}${letter.toUpperCase()}`)
+}
+

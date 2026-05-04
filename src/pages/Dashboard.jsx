@@ -1,8 +1,9 @@
-import { startTransition, useMemo, useState } from 'react'
+import { startTransition, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Filter as FilterIcon, RefreshCw } from 'lucide-react'
 import PageWrapper, { PageBody, PageHeader } from '../components/layout/PageWrapper'
 import StatsBar from '../components/dashboard/StatsBar'
+import OperationsPanel from '../components/dashboard/OperationsPanel'
 import StationCard from '../components/dashboard/StationCard'
 import StationList from '../components/dashboard/StationList'
 import Button from '../components/common/Button'
@@ -11,16 +12,43 @@ import EmptyState from '../components/common/EmptyState'
 import { useStations } from '../hooks/useStations'
 import useAutoRefresh from '../hooks/useAutoRefresh'
 import useNowTicker from '../hooks/useNowTicker'
+import useRefreshInterval from '../hooks/useRefreshInterval'
 import { REGIONS } from '../services/mockData'
 import { timeAgo } from '../utils/formatters'
-import { getRefreshIntervalMs, getUserPreferences } from '../utils/preferences'
+import { getUserPreferences } from '../utils/preferences'
+import { useRealtimeRefresh } from '../hooks/useSocket'
+import { fetchStatsSummary } from '../services/api'
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const { stations, loading, refresh, lastUpdated } = useStations()
-  const refreshIntervalMs = useMemo(() => getRefreshIntervalMs(), [])
+  const [summary, setSummary] = useState(null)
+  const refreshIntervalMs = useRefreshInterval()
+
+  const refreshSummary = async () => {
+    try {
+      const data = await fetchStatsSummary()
+      setSummary(data)
+    } catch {
+      setSummary(null)
+    }
+  }
+
   useAutoRefresh(refresh, refreshIntervalMs)
+  useAutoRefresh(refreshSummary, refreshIntervalMs)
+  useRealtimeRefresh(
+    () => {
+      refresh()
+      refreshSummary()
+    },
+    ['status:changed', 'station:added', 'station:removed', 'station:updated', 'stations:updated'],
+    [refresh],
+  )
   useNowTicker(1000)
+
+  useEffect(() => {
+    refreshSummary()
+  }, [])
 
   const [gridFilter, setGridFilter] = useState(() => getUserPreferences().defaultDashboardView)
   const [selectedId, setSelectedId] = useState(null)
@@ -82,6 +110,8 @@ export default function Dashboard() {
           <div className="space-y-5">
             <StatsBar stats={stats} loading={loading} />
 
+            <OperationsPanel summary={summary} stations={stations} />
+
             <div className="card">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-bg-border px-4 py-3">
                 <div>
@@ -126,6 +156,7 @@ export default function Dashboard() {
                         key={station.id}
                         station={station}
                         onClick={() => openStation(station)}
+                        onControl={() => navigate(`/stations/${station.id}/control`)}
                       />
                     ))}
                   </div>

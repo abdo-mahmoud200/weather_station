@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-004",
+  "stationName": "Wadi El-Rayan",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

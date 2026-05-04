@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-009",
+  "stationName": "Wadi Feiran",
+  "profile": "low-power",
+  "settings": {
+    "readingIntervalSeconds": 180,
+    "alertProfile": "maintenance",
+    "transmissionMode": "low-power"
+  }
+}

@@ -1,7 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import {
   LayoutGrid,
-  Radio,
   FileText,
   Bell,
   ServerCog,
@@ -40,9 +39,7 @@ export default function Sidebar({ collapsed, onCollapse, open, onClose, alertsCo
       >
         <div className="flex h-14 items-center justify-between border-b border-bg-border px-3">
           <div className="flex items-center gap-2 px-1">
-            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-500/15 text-brand-400">
-              <Radio size={16} />
-            </span>
+            <img src="/logo.svg" alt="" className="h-7 w-7 rounded-full" />
             {!collapsed && (
               <span className="font-display text-xs font-semibold tracking-wider uppercase text-text-secondary">
                 Control

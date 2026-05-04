@@ -22,8 +22,9 @@ export default function Modal({
     const prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     // autofocus panel for accessibility
-    setTimeout(() => panelRef.current?.focus(), 10)
+    const focusTimer = setTimeout(() => panelRef.current?.focus(), 10)
     return () => {
+      clearTimeout(focusTimer)
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = prevOverflow
     }

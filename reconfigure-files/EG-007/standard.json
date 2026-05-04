@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-007",
+  "stationName": "Jabal El-Shayeb",
+  "profile": "standard",
+  "settings": {
+    "readingIntervalSeconds": 45,
+    "alertProfile": "desert-standard",
+    "transmissionMode": "balanced"
+  }
+}

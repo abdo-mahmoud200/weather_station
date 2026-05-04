@@ -22,15 +22,23 @@ import { fetchAlerts, fetchActivity, updateAlertStatus } from '../services/api'
 import { useStations } from '../hooks/useStations'
 import useAutoRefresh from '../hooks/useAutoRefresh'
 import useNowTicker from '../hooks/useNowTicker'
+import useRefreshInterval from '../hooks/useRefreshInterval'
 import { formatDateTime, timeAgo } from '../utils/formatters'
-import { getRefreshIntervalMs } from '../utils/preferences'
 import { ALERT_TYPES, SEVERITIES, STATUSES, EVENT_TYPES } from '../services/mockData'
+import { useRealtimeRefresh } from '../hooks/useSocket'
 
 const ALERT_ICONS = {
-  'sensor failure': AlertTriangle,
-  'connection lost': WifiOff,
-  'battery low': BatteryLow,
-  'data anomaly': Sparkles,
+  temperature_high: AlertTriangle,
+  temperature_critical: AlertTriangle,
+  temperature_freezing: AlertTriangle,
+  battery_low: BatteryLow,
+  battery_critical: BatteryLow,
+  signal_weak: WifiOff,
+  signal_lost: WifiOff,
+  wind_strong: Sparkles,
+  wind_storm: Sparkles,
+  station_shutdown: WifiOff,
+  station_connection_lost: WifiOff,
 }
 
 const SEVERITY_TONE = {
@@ -42,13 +50,12 @@ const SEVERITY_TONE = {
 const STATUS_TONE = {
   new: 'danger',
   acknowledged: 'warning',
-  resolved: 'success',
 }
 
 export default function Alerts() {
   const toast = useToast()
   const { stations } = useStations()
-  const refreshIntervalMs = useMemo(() => getRefreshIntervalMs(), [])
+  const refreshIntervalMs = useRefreshInterval()
 
   const [tab, setTab] = useState('alerts')
 
@@ -80,6 +87,14 @@ export default function Alerts() {
     loadAlerts()
     loadActivity()
   }, refreshIntervalMs)
+  useRealtimeRefresh(
+    () => {
+      loadAlerts()
+      loadActivity()
+    },
+    ['alert:new', 'status:changed', 'station:added', 'station:removed', 'station:updated', 'stations:updated'],
+    [],
+  )
   useNowTicker(1000)
 
   // Alert filters
@@ -264,28 +279,16 @@ export default function Alerts() {
                           <Button
                             size="sm"
                             variant="warning"
+                            title="Marks the alert as reviewed. It does not fix station telemetry."
                             onClick={() => changeAlertStatus(a, 'acknowledged')}
                           >
                             Acknowledge
                           </Button>
                         )}
-                        {a.status !== 'resolved' && (
-                          <Button
-                            size="sm"
-                            variant="success"
-                            onClick={() => changeAlertStatus(a, 'resolved')}
-                          >
-                            Resolve
-                          </Button>
-                        )}
-                        {a.status === 'resolved' && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => changeAlertStatus(a, 'new')}
-                          >
-                            Reopen
-                          </Button>
+                        {a.status === 'acknowledged' && (
+                          <Badge tone="warning" size="sm">
+                            Acknowledged
+                          </Badge>
                         )}
                       </div>
                     </li>

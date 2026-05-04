@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, LogOut, Mountain, User } from 'lucide-react'
+import { ChevronDown, LogOut, User } from 'lucide-react'
 import LiveDot from '../common/LiveDot'
 import { formatDateTime } from '../../utils/formatters'
 import { useAuth } from '../auth/AuthProvider'
+import { useSocketConnection } from '../../hooks/useSocket'
 
 export default function Navbar({ onToggleSidebar }) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const socketConnection = useSocketConnection()
   const [now, setNow] = useState(new Date())
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -33,9 +35,11 @@ export default function Navbar({ onToggleSidebar }) {
           </button>
 
           <div className="flex items-center gap-2.5">
-            <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-glow">
-              <Mountain size={18} strokeWidth={2.25} />
-            </span>
+            <img
+              src="/logo.svg"
+              alt="Wilderness Weather Stations"
+              className="h-9 w-9 rounded-full shadow-glow"
+            />
             <div className="hidden sm:flex flex-col leading-tight">
               <span className="font-display text-sm font-semibold tracking-tight text-text-primary">
                 Wilderness Weather Stations
@@ -49,8 +53,10 @@ export default function Navbar({ onToggleSidebar }) {
 
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-2 rounded-full border border-bg-border bg-bg-elevated px-3 py-1 md:flex">
-            <LiveDot tone="success" size="sm" />
-            <span className="text-xs font-medium text-text-secondary">Live</span>
+            <LiveDot tone={socketConnection.connected ? 'success' : 'warning'} size="sm" />
+            <span className="text-xs font-medium text-text-secondary">
+              {socketConnection.connected ? 'Live' : 'Polling'}
+            </span>
             <span className="mx-1 h-3 w-px bg-bg-border" />
             <span className="metric-value text-xs text-text-primary">{formatDateTime(now)}</span>
           </div>

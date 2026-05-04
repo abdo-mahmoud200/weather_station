@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-015",
+  "stationName": "Dakhla",
+  "profile": "standard",
+  "settings": {
+    "readingIntervalSeconds": 30,
+    "alertProfile": "desert-standard",
+    "transmissionMode": "balanced"
+  }
+}

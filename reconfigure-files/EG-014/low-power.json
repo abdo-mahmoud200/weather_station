@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-014",
+  "stationName": "Wadi Halfa Area",
+  "profile": "low-power",
+  "settings": {
+    "readingIntervalSeconds": 120,
+    "alertProfile": "maintenance",
+    "transmissionMode": "low-power"
+  }
+}

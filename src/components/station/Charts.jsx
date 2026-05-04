@@ -1,3 +1,4 @@
+import { useId } from 'react'
 import {
   Area,
   AreaChart,
@@ -48,13 +49,15 @@ export function TimeSeriesChart({
   height = 220,
 }) {
   const Chart = type === 'area' ? AreaChart : LineChart
+  const reactId = useId().replace(/:/g, '')
+  const gradientId = `grad-${reactId}`
 
   return (
     <div style={{ width: '100%', height }}>
       <ResponsiveContainer>
         <Chart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id={`grad-${color}`} x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={color} stopOpacity={0.25} />
               <stop offset="100%" stopColor={color} stopOpacity={0} />
             </linearGradient>
@@ -82,7 +85,7 @@ export function TimeSeriesChart({
               dataKey="value"
               stroke={color}
               strokeWidth={2}
-              fill={`url(#grad-${color})`}
+              fill={`url(#${gradientId})`}
               isAnimationActive={false}
               dot={false}
             />

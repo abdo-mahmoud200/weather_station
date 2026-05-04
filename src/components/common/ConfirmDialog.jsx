@@ -26,7 +26,9 @@ export default function ConfirmDialog({
     if (!open) setTyped('')
   }, [open])
 
-  const confirmEnabled = confirmPhrase ? typed === confirmPhrase : true
+  const confirmEnabled = confirmPhrase
+    ? typed.toUpperCase() === confirmPhrase.toUpperCase()
+    : true
 
   return (
     <Modal

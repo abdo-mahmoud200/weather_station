@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-011",
+  "stationName": "Shalatin",
+  "profile": "low-power",
+  "settings": {
+    "readingIntervalSeconds": 120,
+    "alertProfile": "maintenance",
+    "transmissionMode": "low-power"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-012",
+  "stationName": "Halayeb",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}

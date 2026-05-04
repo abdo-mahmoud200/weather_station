@@ -1,0 +1,10 @@
+{
+  "stationId": "EG-011",
+  "stationName": "Shalatin",
+  "profile": "storm-watch",
+  "settings": {
+    "readingIntervalSeconds": 10,
+    "alertProfile": "desert-extreme",
+    "transmissionMode": "realtime"
+  }
+}
