@@ -400,7 +400,7 @@ export default function StationControlPanel({ stationId }) {
                               {command.label}
                             </span>
                           </div>
-                          <p className="mt-2 text-xs text-text-muted">{command.description(station)}</p>
+                          <p className="mt-2 break-words text-xs text-text-muted">{command.description(station)}</p>
                           {!allowed && command.disabledMsg && (
                             <p className="mt-2 text-[11px] text-accent-warning">
                               {command.disabledMsg}
@@ -480,7 +480,7 @@ export default function StationControlPanel({ stationId }) {
                   title="Remote Instrument Control"
                   subtitle="Send direct commands to a specific instrument."
                   action={
-                    <Button size="sm" variant="ghost" onClick={() => setRemoteOpen(false)}>
+                    <Button size="sm" variant="ghost" onClick={() => setRemoteOpen(false)} className="w-full sm:w-auto">
                       Close
                     </Button>
                   }
@@ -558,7 +558,7 @@ export default function StationControlPanel({ stationId }) {
                   title="Station Reconfiguration"
                   subtitle="Apply operating settings to the selected station."
                   action={
-                    <Button size="sm" variant="ghost" onClick={() => setReconfigureOpen(false)}>
+                    <Button size="sm" variant="ghost" onClick={() => setReconfigureOpen(false)} className="w-full sm:w-auto">
                       Close
                     </Button>
                   }
@@ -652,7 +652,7 @@ export default function StationControlPanel({ stationId }) {
                   title="Software Update"
                   subtitle={`Current firmware: ${station.softwareVersion}`}
                   action={
-                    <Button size="sm" variant="ghost" onClick={() => setUpdateOpen(false)}>
+                    <Button size="sm" variant="ghost" onClick={() => setUpdateOpen(false)} className="w-full sm:w-auto">
                       Close
                     </Button>
                   }
@@ -668,7 +668,7 @@ export default function StationControlPanel({ stationId }) {
                         <div className="text-sm">
                           {file ? (
                             <>
-                              Selected: <span className="font-mono">{file.name}</span>
+                              Selected: <span className="break-all font-mono">{file.name}</span>
                             </>
                           ) : (
                             <>Click to select a firmware bundle</>
@@ -696,17 +696,18 @@ export default function StationControlPanel({ stationId }) {
                         </div>
                       )}
 
-                      <div className="mt-4 flex items-center gap-2">
+                      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Button
                           icon={Upload}
                           variant="primary"
                           loading={uploading}
                           onClick={doUpload}
                           disabled={!file}
+                          className="w-full sm:w-auto"
                         >
                           Upload and Install
                         </Button>
-                        <Button variant="ghost" onClick={() => setFile(null)} disabled={uploading}>
+                        <Button variant="ghost" onClick={() => setFile(null)} disabled={uploading} className="w-full sm:w-auto">
                           Clear
                         </Button>
                       </div>
@@ -736,7 +737,7 @@ export default function StationControlPanel({ stationId }) {
                               )}
                             </span>
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-center justify-between">
+                              <div className="flex flex-col gap-1 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                                 <span className="metric-value font-semibold text-text-primary">
                                   v{item.version}
                                 </span>

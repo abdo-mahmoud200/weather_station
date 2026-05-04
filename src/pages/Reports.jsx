@@ -158,7 +158,7 @@ export default function Reports() {
               <div className="space-y-4">
                 <div>
                   <Label icon={Calendar}>Date range</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     <Input
                       type="datetime-local"
                       value={from}
@@ -274,7 +274,7 @@ export default function Reports() {
 
                 <div>
                   <Label>Data types</Label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
                     {DATA_TYPES.map((type) => (
                       <Checkbox
                         key={type.key}
@@ -288,7 +288,7 @@ export default function Reports() {
 
                 <div>
                   <Label>Export format</Label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3">
                     {FORMATS.map((entry) => {
                       const Icon = entry.icon
                       const active = format === entry.key
@@ -297,24 +297,24 @@ export default function Reports() {
                         <button
                           key={entry.key}
                           onClick={() => setFormat(entry.key)}
-                          className={`flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                          className={`flex min-w-0 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
                             active
                               ? 'border-brand-400/60 bg-brand-500/10 text-brand-200'
                               : 'border-bg-border bg-bg-elevated/40 text-text-secondary hover:text-text-primary'
                           }`}
                         >
-                          <Icon size={14} /> {entry.label}
+                          <Icon className="shrink-0" size={14} /> <span className="truncate">{entry.label}</span>
                         </button>
                       )
                     })}
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-2">
-                  <Button variant="primary" onClick={preview} loading={loading}>
+                <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center">
+                  <Button variant="primary" onClick={preview} loading={loading} className="w-full sm:w-auto">
                     Generate Preview
                   </Button>
-                  <Button icon={Download} onClick={download} disabled={rows.length === 0}>
+                  <Button icon={Download} onClick={download} disabled={rows.length === 0} className="w-full sm:w-auto">
                     Download
                   </Button>
                 </div>
@@ -346,7 +346,7 @@ export default function Reports() {
               </CardBody>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full border-separate border-spacing-0 text-xs">
+                <table className="min-w-[760px] border-separate border-spacing-0 text-xs">
                   <thead>
                     <tr className="sticky top-0 bg-bg-surface">
                       {columns.map((column) => (

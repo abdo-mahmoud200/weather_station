@@ -197,9 +197,9 @@ export default function Preferences() {
                 subtitle="What these settings affect right now."
               />
               <CardBody className="space-y-2 text-sm text-text-secondary">
-                <p>Saved preferences are stored locally in this browser only.</p>
-                <p>Auto-refresh changes apply when live pages are opened again after saving.</p>
-                <p>Dashboard and reports defaults are used the next time those pages load.</p>
+                <p className="break-words">Saved preferences are stored locally in this browser only.</p>
+                <p className="break-words">Auto-refresh changes apply when live pages are opened again after saving.</p>
+                <p className="break-words">Dashboard and reports defaults are used the next time those pages load.</p>
                 <p>
                   Reset returns everything to:
                   <span className="ml-1 font-mono text-text-primary">
@@ -230,9 +230,9 @@ function PreferenceRow({ label, description, children }) {
 
 function SummaryItem({ label, value }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-bg-border bg-bg-elevated/30 px-3 py-2">
+    <div className="flex flex-col gap-1 rounded-lg border border-bg-border bg-bg-elevated/30 px-3 py-2 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between min-[420px]:gap-3">
       <span className="text-text-muted">{label}</span>
-      <span className="font-mono text-text-primary">{value}</span>
+      <span className="break-words font-mono text-text-primary">{value}</span>
     </div>
   )
 }

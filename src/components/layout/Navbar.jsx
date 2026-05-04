@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, LogOut, User } from 'lucide-react'
+import { ChevronDown, LogOut, Menu, User } from 'lucide-react'
 import LiveDot from '../common/LiveDot'
 import { formatDateTime } from '../../utils/formatters'
 import { useAuth } from '../auth/AuthProvider'
@@ -20,25 +20,21 @@ export default function Navbar({ onToggleSidebar }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-bg-border bg-bg-base/80 backdrop-blur">
-      <div className="flex h-14 items-center justify-between px-4 lg:px-6">
-        <div className="flex items-center gap-3">
+      <div className="flex h-14 min-w-0 items-center justify-between gap-3 px-3 sm:px-4 lg:px-6">
+        <div className="flex min-w-0 items-center gap-3">
           <button
             onClick={onToggleSidebar}
-            className="rounded-md border border-bg-border bg-bg-elevated p-1.5 text-text-secondary focus-ring lg:hidden"
+            className="shrink-0 rounded-md border border-bg-border bg-bg-elevated p-1.5 text-text-secondary focus-ring lg:hidden"
             aria-label="Toggle sidebar"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="4" y1="7" x2="20" y2="7" />
-              <line x1="4" y1="12" x2="20" y2="12" />
-              <line x1="4" y1="17" x2="20" y2="17" />
-            </svg>
+            <Menu size={16} />
           </button>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex min-w-0 items-center gap-2.5">
             <img
               src="/logo.svg"
               alt="Wilderness Weather Stations"
-              className="h-9 w-9 rounded-full shadow-glow"
+              className="h-8 w-8 shrink-0 rounded-full shadow-glow sm:h-9 sm:w-9"
             />
             <div className="hidden sm:flex flex-col leading-tight">
               <span className="font-display text-sm font-semibold tracking-tight text-text-primary">
@@ -51,7 +47,7 @@ export default function Navbar({ onToggleSidebar }) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <div className="hidden items-center gap-2 rounded-full border border-bg-border bg-bg-elevated px-3 py-1 md:flex">
             <LiveDot tone={socketConnection.connected ? 'success' : 'warning'} size="sm" />
             <span className="text-xs font-medium text-text-secondary">
@@ -64,7 +60,7 @@ export default function Navbar({ onToggleSidebar }) {
           <div className="relative">
             <button
               onClick={() => setMenuOpen((value) => !value)}
-              className="flex items-center gap-2 rounded-lg border border-bg-border bg-bg-elevated px-2 py-1.5 text-xs text-text-secondary hover:text-text-primary focus-ring"
+              className="flex min-w-0 items-center gap-2 rounded-lg border border-bg-border bg-bg-elevated px-2 py-1.5 text-xs text-text-secondary hover:text-text-primary focus-ring"
             >
               <span className="flex h-7 w-7 items-center justify-center rounded-full bg-bg-surface text-text-primary">
                 {user?.name?.charAt(0) || <User size={14} />}
@@ -73,7 +69,7 @@ export default function Navbar({ onToggleSidebar }) {
                 <span className="font-medium text-text-primary">{user?.name || 'Operator'}</span>
                 <span className="font-mono text-[10px] text-text-muted">{user?.shift || user?.role}</span>
               </span>
-              <ChevronDown size={14} />
+              <ChevronDown className="shrink-0" size={14} />
             </button>
             {menuOpen && (
               <div

@@ -45,7 +45,7 @@ export default function Modal({
     <div
       aria-modal="true"
       role="dialog"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 animate-fade-in sm:p-4"
     >
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -54,9 +54,9 @@ export default function Modal({
       <div
         ref={panelRef}
         tabIndex={-1}
-        className={`relative w-full ${widths[size]} rounded-xl border border-bg-border bg-bg-surface shadow-2xl focus:outline-none`}
+        className={`relative max-h-[calc(100dvh-1.5rem)] w-full ${widths[size]} overflow-hidden rounded-xl border border-bg-border bg-bg-surface shadow-2xl focus:outline-none sm:max-h-[calc(100dvh-2rem)]`}
       >
-        <div className="flex items-start justify-between border-b border-bg-border px-5 py-4">
+        <div className="flex items-start justify-between gap-3 border-b border-bg-border px-4 py-3 sm:px-5 sm:py-4">
           <div className="min-w-0">
             <h2 className="font-display text-base font-semibold text-text-primary">{title}</h2>
             {description && (
@@ -71,9 +71,9 @@ export default function Modal({
             <X size={18} />
           </button>
         </div>
-        <div className="px-5 py-4">{children}</div>
+        <div className="max-h-[calc(100dvh-11rem)] overflow-y-auto px-4 py-4 sm:px-5">{children}</div>
         {footer && (
-          <div className="flex items-center justify-end gap-2 border-t border-bg-border bg-bg-surface/50 px-5 py-3">
+          <div className="flex flex-col-reverse gap-2 border-t border-bg-border bg-bg-surface/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-end sm:px-5">
             {footer}
           </div>
         )}

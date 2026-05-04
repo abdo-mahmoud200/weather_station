@@ -55,8 +55,8 @@ export default function Profile() {
           <Card>
             <CardHeader icon={UserRound} title="Operator Summary" subtitle="Current signed-in account" />
             <CardBody className="space-y-4">
-              <div className="flex items-center gap-4 rounded-2xl border border-bg-border bg-bg-elevated/30 p-4">
-                <span className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-500/15 font-display text-2xl font-semibold text-brand-300">
+              <div className="flex flex-col gap-4 rounded-2xl border border-bg-border bg-bg-elevated/30 p-4 min-[420px]:flex-row min-[420px]:items-center">
+                <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-500/15 font-display text-2xl font-semibold text-brand-300">
                   {user?.name?.charAt(0) || 'U'}
                 </span>
                 <div className="min-w-0">
@@ -64,7 +64,7 @@ export default function Profile() {
                     {user?.name}
                   </h2>
                   <p className="text-sm text-text-secondary">{user?.role}</p>
-                  <p className="mt-1 font-mono text-xs text-text-muted">{user?.email}</p>
+                  <p className="mt-1 break-all font-mono text-xs text-text-muted">{user?.email}</p>
                 </div>
               </div>
 

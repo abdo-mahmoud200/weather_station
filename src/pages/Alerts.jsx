@@ -183,11 +183,11 @@ export default function Alerts() {
                 alerts.filter((a) => a.status === 'new').length
               } new`}
               action={
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center gap-1 text-xs text-text-muted">
+                <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 xl:flex xl:w-auto xl:flex-wrap xl:items-center">
+                  <span className="hidden items-center gap-1 text-xs text-text-muted xl:inline-flex">
                     <FilterIcon size={12} />
                   </span>
-                  <Select value={alertStation} onChange={(e) => setAlertStation(e.target.value)}>
+                  <Select value={alertStation} onChange={(e) => setAlertStation(e.target.value)} className="w-full xl:w-auto">
                     <option value="all">All stations</option>
                     {stations.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -195,7 +195,7 @@ export default function Alerts() {
                       </option>
                     ))}
                   </Select>
-                  <Select value={alertType} onChange={(e) => setAlertType(e.target.value)}>
+                  <Select value={alertType} onChange={(e) => setAlertType(e.target.value)} className="w-full xl:w-auto">
                     <option value="all">All types</option>
                     {ALERT_TYPES.map((t) => (
                       <option key={t} value={t}>
@@ -203,7 +203,7 @@ export default function Alerts() {
                       </option>
                     ))}
                   </Select>
-                  <Select value={alertSeverity} onChange={(e) => setAlertSeverity(e.target.value)}>
+                  <Select value={alertSeverity} onChange={(e) => setAlertSeverity(e.target.value)} className="w-full xl:w-auto">
                     <option value="all">Any severity</option>
                     {SEVERITIES.map((s) => (
                       <option key={s} value={s}>
@@ -211,7 +211,7 @@ export default function Alerts() {
                       </option>
                     ))}
                   </Select>
-                  <Select value={alertStatus} onChange={(e) => setAlertStatus(e.target.value)}>
+                  <Select value={alertStatus} onChange={(e) => setAlertStatus(e.target.value)} className="w-full xl:w-auto">
                     <option value="all">Any status</option>
                     {STATUSES.map((s) => (
                       <option key={s} value={s}>
@@ -267,20 +267,21 @@ export default function Alerts() {
                               {a.status}
                             </Badge>
                           </div>
-                          <p className="mt-0.5 text-sm text-text-secondary">{a.message}</p>
+                          <p className="mt-0.5 break-words text-sm text-text-secondary">{a.message}</p>
                           <p className="mt-0.5 text-[11px] text-text-muted">
                             <span className="font-mono">{formatDateTime(a.timestamp)}</span>{' '}
                             | {timeAgo(a.timestamp)} | {a.type}
                           </p>
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-2 sm:justify-end">
                         {a.status === 'new' && (
                           <Button
                             size="sm"
                             variant="warning"
                             title="Marks the alert as reviewed. It does not fix station telemetry."
                             onClick={() => changeAlertStatus(a, 'acknowledged')}
+                            className="w-full sm:w-auto"
                           >
                             Acknowledge
                           </Button>
@@ -308,9 +309,9 @@ export default function Alerts() {
                     placeholder="Search..."
                     value={actQuery}
                     onChange={(e) => setActQuery(e.target.value)}
-                    wrapperClassName="w-40"
+                    wrapperClassName="w-full sm:w-40"
                   />
-                  <Select value={actStation} onChange={(e) => setActStation(e.target.value)}>
+                  <Select value={actStation} onChange={(e) => setActStation(e.target.value)} className="w-full sm:w-auto">
                     <option value="all">All stations</option>
                     {stations.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -318,7 +319,7 @@ export default function Alerts() {
                       </option>
                     ))}
                   </Select>
-                  <Select value={actType} onChange={(e) => setActType(e.target.value)}>
+                  <Select value={actType} onChange={(e) => setActType(e.target.value)} className="w-full sm:w-auto">
                     <option value="all">All events</option>
                     {EVENT_TYPES.map((t) => (
                       <option key={t} value={t}>
@@ -330,7 +331,7 @@ export default function Alerts() {
                     type="date"
                     value={actDate}
                     onChange={(e) => setActDate(e.target.value)}
-                    className="h-9 rounded-md border border-bg-border bg-bg-base px-2 text-xs text-text-primary outline-none focus:border-brand-400/60"
+                    className="h-9 w-full min-w-0 rounded-md border border-bg-border bg-bg-base px-2 text-xs text-text-primary outline-none focus:border-brand-400/60 sm:w-auto"
                   />
                 </div>
               }
@@ -365,7 +366,7 @@ export default function Alerts() {
                         <span className="text-text-muted">{e.stationId}</span>
                         <span className="text-text-muted">by {e.actor}</span>
                       </div>
-                      <p className="mt-0.5 font-sans text-text-secondary">{e.message}</p>
+                      <p className="mt-0.5 break-words font-sans text-text-secondary">{e.message}</p>
                     </div>
                   </li>
                 ))}
@@ -382,14 +383,14 @@ function TabButton({ active, onClick, icon: Icon, children }) {
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+      className={`flex min-w-0 items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
         active
           ? 'bg-bg-surface text-text-primary shadow-sm'
           : 'text-text-secondary hover:text-text-primary'
       }`}
     >
-      <Icon size={13} />
-      {children}
+      <Icon className="shrink-0" size={13} />
+      <span className="min-w-0 truncate">{children}</span>
     </button>
   )
 }

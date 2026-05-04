@@ -8,7 +8,7 @@ export function Input({
   ...props
 }) {
   return (
-    <div className={`relative ${wrapperClassName}`}>
+    <div className={`relative min-w-0 max-w-full ${wrapperClassName}`}>
       {Icon && (
         <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-text-muted">
           <Icon size={14} />
@@ -16,7 +16,7 @@ export function Input({
       )}
       <input
         type={type}
-        className={`h-9 w-full rounded-md border border-bg-border bg-bg-base px-3 ${
+        className={`h-9 w-full min-w-0 rounded-md border border-bg-border bg-bg-base px-3 ${
           Icon ? 'pl-8' : ''
         } text-sm text-text-primary placeholder:text-text-muted outline-none transition-colors focus:border-brand-400/60 focus:ring-1 focus:ring-brand-400/40 ${className}`}
         {...props}
@@ -32,7 +32,7 @@ export function SearchInput(props) {
 export function Select({ className = '', children, ...props }) {
   return (
     <select
-      className={`h-9 rounded-md border border-bg-border bg-bg-base px-3 text-sm text-text-primary outline-none transition-colors focus:border-brand-400/60 focus:ring-1 focus:ring-brand-400/40 ${className}`}
+      className={`h-9 min-w-0 max-w-full rounded-md border border-bg-border bg-bg-base px-3 text-sm text-text-primary outline-none transition-colors focus:border-brand-400/60 focus:ring-1 focus:ring-brand-400/40 ${className}`}
       {...props}
     >
       {children}
@@ -43,7 +43,7 @@ export function Select({ className = '', children, ...props }) {
 export function Textarea({ className = '', ...props }) {
   return (
     <textarea
-      className={`w-full rounded-md border border-bg-border bg-bg-base px-3 py-2 text-sm text-text-primary placeholder:text-text-muted outline-none transition-colors focus:border-brand-400/60 focus:ring-1 focus:ring-brand-400/40 ${className}`}
+      className={`w-full min-w-0 rounded-md border border-bg-border bg-bg-base px-3 py-2 text-sm text-text-primary placeholder:text-text-muted outline-none transition-colors focus:border-brand-400/60 focus:ring-1 focus:ring-brand-400/40 ${className}`}
       {...props}
     />
   )

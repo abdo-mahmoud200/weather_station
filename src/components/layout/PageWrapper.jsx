@@ -55,10 +55,10 @@ export default function PageWrapper({ children, alertsCount = 0 }) {
 export function PageHeader({ title, description, actions, breadcrumbs }) {
   return (
     <div className="border-b border-bg-border bg-bg-base/40">
-      <div className="flex flex-col gap-3 px-4 py-5 lg:flex-row lg:items-end lg:justify-between lg:px-6">
+      <div className="flex flex-col gap-3 px-4 py-4 sm:py-5 lg:flex-row lg:items-end lg:justify-between lg:px-6">
         <div className="min-w-0">
           {breadcrumbs && (
-            <div className="mb-1 flex items-center gap-1 text-xs text-text-muted">
+            <div className="mb-1 flex flex-wrap items-center gap-1 text-xs text-text-muted">
               {breadcrumbs.map((breadcrumb, index) => (
                 <span key={`${breadcrumb.label}-${index}`} className="flex items-center gap-1">
                   {index > 0 && <span className="text-text-dim">/</span>}
@@ -73,17 +73,17 @@ export function PageHeader({ title, description, actions, breadcrumbs }) {
               ))}
             </div>
           )}
-          <h1 className="font-display text-xl font-semibold tracking-tight text-text-primary lg:text-2xl">
+          <h1 className="break-words font-display text-xl font-semibold tracking-tight text-text-primary lg:text-2xl">
             {title}
           </h1>
-          {description && <p className="mt-1 text-sm text-text-secondary">{description}</p>}
+          {description && <p className="mt-1 break-words text-sm text-text-secondary">{description}</p>}
         </div>
-        {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+        {actions && <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">{actions}</div>}
       </div>
     </div>
   )
 }
 
 export function PageBody({ className = '', children }) {
-  return <div className={`px-4 py-5 lg:px-6 lg:py-6 ${className}`}>{children}</div>
+  return <div className={`min-w-0 px-3 py-4 sm:px-4 sm:py-5 lg:px-6 lg:py-6 ${className}`}>{children}</div>
 }

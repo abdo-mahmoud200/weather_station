@@ -1,5 +1,6 @@
 import type { Server as HttpServer } from 'http'
 import { Server } from 'socket.io'
+import { isOriginAllowed } from '../config/cors'
 
 let io: Server | null = null
 
@@ -7,16 +8,10 @@ const AUTH_TOKEN = process.env.AUTH_TOKEN || 'wws-demo-token'
 const AUTH_DISABLED = process.env.AUTH_DISABLED === 'true'
 
 export function initWebSocket(server: HttpServer): Server {
-  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean)
-
   io = new Server(server, {
     cors: {
       origin: (origin, cb) => {
-        if (!origin) return cb(null, true)
-        if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) return cb(null, true)
+        if (isOriginAllowed(origin)) return cb(null, true)
         return cb(new Error(`Origin ${origin} not allowed by CORS`))
       },
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],

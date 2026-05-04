@@ -31,7 +31,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-base px-4 py-10">
+    <div className="min-h-screen bg-bg-base px-3 py-6 sm:px-4 sm:py-10">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] max-w-6xl items-center justify-center">
         <div className="grid w-full gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <section className="hidden rounded-3xl border border-bg-border bg-gradient-to-br from-brand-900/30 via-bg-surface to-bg-base p-8 lg:flex lg:flex-col lg:justify-between">
@@ -56,11 +56,11 @@ export default function Login() {
             </div>
           </section>
 
-          <Card className="overflow-hidden rounded-3xl">
+          <Card className="overflow-hidden rounded-2xl sm:rounded-3xl">
             <CardBody className="p-0">
-              <div className="border-b border-bg-border bg-bg-surface/70 px-6 py-6">
+              <div className="border-b border-bg-border bg-bg-surface/70 px-4 py-5 sm:px-6 sm:py-6">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-300">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-300 sm:h-12 sm:w-12">
                     <LogIn size={22} />
                   </span>
                   <div>
@@ -74,7 +74,7 @@ export default function Login() {
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5 px-6 py-6">
+              <form onSubmit={handleSubmit} className="space-y-5 px-4 py-5 sm:px-6 sm:py-6">
                 <div>
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-text-muted">
                     Email
@@ -101,7 +101,7 @@ export default function Login() {
                   />
                 </div>
 
-                <div className="rounded-2xl border border-bg-border bg-bg-elevated/30 p-4 text-sm text-text-secondary">
+                <div className="rounded-2xl border border-bg-border bg-bg-elevated/30 p-3 text-sm text-text-secondary sm:p-4">
                   <div className="font-medium text-text-primary">Demo credentials</div>
                   <div className="mt-2 space-y-1 font-mono text-xs">
                     <div>Email: operator@wws.gov</div>

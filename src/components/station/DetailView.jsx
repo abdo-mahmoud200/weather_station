@@ -114,6 +114,7 @@ export default function DetailView({ stationId }) {
               variant="primary"
               onClick={() => navigate(`/stations/${stationId}/control`)}
               disabled={!station}
+              className="max-sm:flex-1"
             >
               Control Panel
             </Button>
@@ -192,8 +193,8 @@ export default function DetailView({ stationId }) {
               />
 
               <div className="card flex flex-col justify-between p-4 xl:col-span-2">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     <Compass size={14} className="text-text-muted" />
                     <span className="text-xs font-medium uppercase tracking-wider text-text-muted">
                       Wind Direction
@@ -261,10 +262,10 @@ export default function DetailView({ stationId }) {
 function ChartCard({ title, subtitle, icon: TrendIcon, loading, content }) {
   return (
     <div className="card p-4">
-      <div className="mb-3 flex items-start justify-between">
-        <div>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <h4 className="font-display text-sm font-semibold text-text-primary">{title}</h4>
-          <p className="text-xs text-text-muted">{subtitle}</p>
+          <p className="break-words text-xs text-text-muted">{subtitle}</p>
         </div>
         {TrendIcon && <TrendIcon size={16} className="text-text-muted" />}
       </div>

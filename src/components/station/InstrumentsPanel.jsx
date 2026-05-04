@@ -33,8 +33,8 @@ export default function InstrumentsPanel({ instruments, lastSync }) {
           const stat = STATUS_META[inst.status] || STATUS_META.OK
           const Icon = meta.icon
           return (
-            <div key={k} className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="flex items-center gap-3">
+            <div key={k} className="flex flex-col gap-3 px-4 py-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+              <div className="flex min-w-0 items-center gap-3">
                 <span
                   className={`flex h-9 w-9 items-center justify-center rounded-md border ${
                     inst.status === 'OK'
@@ -46,7 +46,7 @@ export default function InstrumentsPanel({ instruments, lastSync }) {
                 >
                   <Icon size={16} strokeWidth={2} />
                 </span>
-                <div>
+                <div className="min-w-0">
                   <div className="text-sm font-medium text-text-primary">{meta.label}</div>
                   <div className="metric-value text-xs text-text-muted">
                     Last reading: {formatMetric(inst.lastReading, inst.unit, 1)}

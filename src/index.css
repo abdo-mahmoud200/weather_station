@@ -11,10 +11,12 @@
   body,
   #root {
     height: 100%;
+    min-width: 0;
   }
 
   body {
     @apply bg-bg-base text-text-primary font-sans antialiased;
+    overflow-x: hidden;
     background-image: radial-gradient(
         1000px 500px at 90% -10%,
         rgba(63, 185, 80, 0.06),
@@ -51,6 +53,13 @@
   h3,
   h4 {
     @apply font-display tracking-tight;
+  }
+
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
   }
 }
 

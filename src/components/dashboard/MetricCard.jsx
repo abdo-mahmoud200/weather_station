@@ -25,15 +25,15 @@ export default function MetricCard({
     trend === 'up' ? 'text-brand-300' : trend === 'down' ? 'text-accent-info' : 'text-text-muted'
 
   return (
-    <div className={`card p-4 ${className}`}>
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+    <div className={`card p-3 sm:p-4 ${className}`}>
+      <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {Icon && (
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-bg-elevated text-text-secondary">
               <Icon size={14} strokeWidth={2} />
             </span>
           )}
-          <span className="text-xs font-medium uppercase tracking-wider text-text-muted">
+          <span className="min-w-0 break-words text-xs font-medium uppercase tracking-wider text-text-muted">
             {label}
           </span>
         </div>
@@ -44,7 +44,7 @@ export default function MetricCard({
         )}
       </div>
 
-      <div className="flex items-baseline gap-1.5">
+      <div className="flex min-w-0 flex-wrap items-baseline gap-1.5">
         <span
           className={`metric-value text-2xl font-bold ${
             anomaly ? 'text-accent-danger' : 'text-text-primary'
@@ -58,7 +58,7 @@ export default function MetricCard({
       </div>
 
       {(min !== undefined || max !== undefined || avg !== undefined) && (
-        <div className="mt-3 grid grid-cols-3 divide-x divide-bg-border rounded-md border border-bg-border bg-bg-elevated/40">
+        <div className="mt-3 grid grid-cols-1 divide-y divide-bg-border rounded-md border border-bg-border bg-bg-elevated/40 min-[380px]:grid-cols-3 min-[380px]:divide-x min-[380px]:divide-y-0">
           <Stat label="Min" value={formatMetric(min, unit, digits)} />
           <Stat label="Avg" value={formatMetric(avg, unit, digits)} />
           <Stat label="Max" value={formatMetric(max, unit, digits)} />
@@ -66,7 +66,7 @@ export default function MetricCard({
       )}
 
       {(footer || updatedAt) && (
-        <div className="mt-3 flex items-center justify-between text-[11px] text-text-muted">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-1 text-[11px] text-text-muted">
           <span>{footer}</span>
           {updatedAt && <span className="font-mono">updated {timeAgo(updatedAt)}</span>}
         </div>

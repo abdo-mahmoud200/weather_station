@@ -19,7 +19,7 @@ export default function EgyptStationMap({ stations = [], selectedId, onSelect })
           <h2 className="font-display text-sm font-semibold text-text-primary">Egypt Wilderness Network</h2>
           <p className="text-xs text-text-muted">{stations.length} remote stations across {regions.length} regions</p>
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-text-muted">
+        <div className="flex flex-wrap items-center gap-3 text-[11px] text-text-muted">
           <Legend tone="success" label="Online" />
           <Legend tone="warning" label="Warning" />
           <Legend tone="danger" label="Offline" />
@@ -27,8 +27,8 @@ export default function EgyptStationMap({ stations = [], selectedId, onSelect })
       </div>
 
       <div className="grid grid-cols-1 gap-0 lg:grid-cols-[1fr_280px]">
-        <div className="relative min-h-[360px] bg-bg-base">
-          <svg viewBox="0 0 720 460" className="h-full min-h-[360px] w-full">
+        <div className="relative min-h-[280px] bg-bg-base sm:min-h-[360px]">
+          <svg viewBox="0 0 720 460" className="h-full min-h-[280px] w-full sm:min-h-[360px]">
             <defs>
               <linearGradient id="mapLand" x1="0" x2="1" y1="0" y2="1">
                 <stop offset="0%" stopColor="#182230" />

@@ -1,6 +1,7 @@
 import express, { type NextFunction, type Request, type Response } from 'express'
 import cors from 'cors'
 import http from 'http'
+import { isOriginAllowed } from './config/cors'
 import { closeDatabase } from './config/database'
 import stationsRouter from './routes/stations'
 import readingsRouter from './routes/readings'
@@ -13,10 +14,6 @@ import { initWebSocket } from './websocket/wsServer'
 import { startSimulator, stopSimulator } from './services/simulator'
 
 const PORT = Number(process.env.PORT || 3001)
-const CORS_ORIGINS = (process.env.CORS_ORIGIN || 'http://localhost:5173')
-  .split(',')
-  .map((value) => value.trim())
-  .filter(Boolean)
 
 const app = express()
 const server = http.createServer(app)
@@ -26,8 +23,7 @@ initWebSocket(server)
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin) return cb(null, true)
-      if (CORS_ORIGINS.includes(origin) || CORS_ORIGINS.includes('*')) return cb(null, true)
+      if (isOriginAllowed(origin)) return cb(null, true)
       return cb(new Error(`Origin ${origin} not allowed by CORS`))
     },
     credentials: true,

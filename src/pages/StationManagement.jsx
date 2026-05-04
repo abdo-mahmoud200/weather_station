@@ -216,7 +216,7 @@ export default function StationManagement() {
                     onChange={(event) => handleChange('notes', event.target.value)}
                   />
                 </Field>
-                <div className="rounded-xl border border-bg-border bg-bg-elevated/20 p-3 text-sm text-text-secondary">
+                <div className="break-words rounded-xl border border-bg-border bg-bg-elevated/20 p-3 text-sm text-text-secondary">
                   New station IDs are assigned automatically by the backend as EG-XXX. Removing a station means decommissioning it from the platform registry.
                   The physical hardware may still exist in the field until a separate maintenance mission removes it.
                 </div>
@@ -239,7 +239,7 @@ export default function StationManagement() {
                     placeholder="Search stations..."
                     value={query}
                     onChange={(event) => setQuery(event.target.value)}
-                    wrapperClassName="w-52"
+                    wrapperClassName="w-full sm:w-52"
                   />
                 }
               />
@@ -293,7 +293,7 @@ export default function StationManagement() {
                   {archivedStations.map((station) => (
                     <div key={station.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="font-mono text-xs text-text-muted">{station.id}</span>
                           <span className="text-sm font-medium text-text-primary">{station.name}</span>
                           <Badge tone="warning" size="xs">
@@ -363,10 +363,10 @@ function StationRow({ station, onDecommission }) {
           <span>Elevation {station.elevation} m</span>
         </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col gap-2 min-[420px]:flex-row min-[420px]:items-center">
         <Link
           to={`/stations/${station.id}`}
-          className="rounded-md border border-bg-border px-3 py-2 text-xs text-text-secondary transition-colors hover:bg-bg-elevated hover:text-text-primary"
+          className="inline-flex h-8 items-center justify-center rounded-md border border-bg-border px-3 text-xs text-text-secondary transition-colors hover:bg-bg-elevated hover:text-text-primary"
         >
           Open
         </Link>

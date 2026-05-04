@@ -122,11 +122,15 @@ export default function Dashboard() {
                     Click a station card to open its detail view.
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
                   <span className="inline-flex items-center gap-1 text-xs text-text-muted">
                     <FilterIcon size={12} /> View
                   </span>
-                  <Select value={gridFilter} onChange={(event) => setGridFilter(event.target.value)}>
+                  <Select
+                    value={gridFilter}
+                    onChange={(event) => setGridFilter(event.target.value)}
+                    className="w-full sm:w-auto"
+                  >
                     <option value="all">All ({stations.length})</option>
                     <option value="online">Online ({stats.online})</option>
                     <option value="warnings">Warnings ({stats.warnings})</option>

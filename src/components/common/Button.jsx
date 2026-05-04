@@ -1,7 +1,7 @@
 import { forwardRef } from 'react'
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all focus-ring disabled:cursor-not-allowed disabled:opacity-50 select-none'
+  'inline-flex min-w-0 max-w-full items-center justify-center gap-2 rounded-lg font-medium transition-all focus-ring disabled:cursor-not-allowed disabled:opacity-50 select-none'
 
 const sizes = {
   xs: 'h-7 px-2 text-xs',
@@ -54,12 +54,12 @@ const Button = forwardRef(function Button(
       aria-busy={loading || undefined}
     >
       {loading ? (
-        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+        <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-white/30 border-t-white" />
       ) : Icon ? (
-        <Icon size={16} strokeWidth={2.25} />
+        <Icon className="shrink-0" size={16} strokeWidth={2.25} />
       ) : null}
-      {children && <span>{children}</span>}
-      {IconRight && !loading && <IconRight size={16} strokeWidth={2.25} />}
+      {children && <span className="min-w-0 truncate">{children}</span>}
+      {IconRight && !loading && <IconRight className="shrink-0" size={16} strokeWidth={2.25} />}
     </AsComponent>
   )
 })

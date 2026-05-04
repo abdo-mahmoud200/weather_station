@@ -46,7 +46,7 @@ export default function StationCard({ station, onClick, onControl }) {
         ].join(' ')}
       />
 
-      <div className="flex items-start justify-between p-4 pb-2">
+      <div className="flex items-start justify-between gap-2 p-4 pb-2">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="font-mono text-[11px] font-semibold tracking-wider text-text-muted">
@@ -66,7 +66,7 @@ export default function StationCard({ station, onClick, onControl }) {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 px-4 pb-3">
+      <div className="grid grid-cols-1 gap-2 px-4 pb-3 min-[380px]:grid-cols-2">
         <MiniStat
           icon={Thermometer}
           label="Air"
@@ -110,7 +110,7 @@ export default function StationCard({ station, onClick, onControl }) {
         </div>
       )}
 
-      <div className="mt-auto flex items-center justify-between border-t border-bg-border bg-bg-base/40 px-4 py-2 text-[11px] text-text-muted">
+      <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-bg-border bg-bg-base/40 px-4 py-2 text-[11px] text-text-muted">
         <span className="inline-flex items-center gap-1">
           <BatteryCharging size={12} />
           <span className="metric-value">{station.battery}%</span>

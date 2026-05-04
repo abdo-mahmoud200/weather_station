@@ -16,8 +16,8 @@ export default function WindCompass({ degrees, speed, unit = 'm/s', size = 170 }
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+      <div className="relative w-full" style={{ aspectRatio: '1 / 1', maxWidth: size }}>
+        <svg viewBox={`0 0 ${size} ${size}`} className="h-full w-full">
           <defs>
             <radialGradient id={gradientId} cx="50%" cy="50%" r="50%">
               <stop offset="0%" stopColor="#161d29" />
@@ -80,7 +80,7 @@ export default function WindCompass({ degrees, speed, unit = 'm/s', size = 170 }
         </svg>
       </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-3 text-center">
+      <div className="mt-2 grid w-full grid-cols-1 gap-2 text-center min-[380px]:grid-cols-2 min-[380px]:gap-3">
         <div>
           <div className="text-[10px] uppercase tracking-wider text-text-muted">Direction</div>
           <div className="metric-value text-base font-semibold text-text-primary">

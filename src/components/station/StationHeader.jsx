@@ -34,7 +34,7 @@ export default function StationHeader({ station, actions }) {
             </div>
 
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-xl font-semibold text-text-primary lg:text-2xl">
+              <h1 className="break-words font-display text-xl font-semibold text-text-primary lg:text-2xl">
                 {station.name}
               </h1>
               <Badge tone={tone} dot size="md">
@@ -82,7 +82,7 @@ export default function StationHeader({ station, actions }) {
             </div>
           </div>
 
-          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+          {actions && <div className="flex w-full flex-wrap items-center gap-2 lg:w-auto lg:justify-end">{actions}</div>}
         </div>
       </div>
     </div>
@@ -91,8 +91,8 @@ export default function StationHeader({ station, actions }) {
 
 function InfoItem({ icon: Icon, label, value, mono }) {
   return (
-    <div className="flex items-center gap-2 rounded-md border border-bg-border bg-bg-surface/50 px-3 py-2">
-      <Icon size={14} className="text-text-muted" />
+    <div className="flex min-w-0 items-center gap-2 rounded-md border border-bg-border bg-bg-surface/50 px-3 py-2">
+      <Icon size={14} className="shrink-0 text-text-muted" />
       <div className="min-w-0">
         <div className="text-[10px] uppercase tracking-wider text-text-muted">{label}</div>
         <div

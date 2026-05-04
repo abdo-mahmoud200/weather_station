@@ -92,7 +92,7 @@ const typeStyles = {
 
 function ToastViewport({ toasts, dismiss }) {
   return (
-    <div className="pointer-events-none fixed right-4 top-4 z-[60] flex w-full max-w-sm flex-col gap-2">
+    <div className="pointer-events-none fixed left-3 right-3 top-3 z-[60] flex max-w-sm flex-col gap-2 sm:left-auto sm:right-4 sm:top-4 sm:w-full">
       {toasts.map((t) => {
         const s = typeStyles[t.type] || typeStyles.info
         const Icon = s.icon
