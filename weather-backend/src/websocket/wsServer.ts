@@ -7,9 +7,18 @@ const AUTH_TOKEN = process.env.AUTH_TOKEN || 'wws-demo-token'
 const AUTH_DISABLED = process.env.AUTH_DISABLED === 'true'
 
 export function initWebSocket(server: HttpServer): Server {
+  const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+
   io = new Server(server, {
     cors: {
-      origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+      origin: (origin, cb) => {
+        if (!origin) return cb(null, true)
+        if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) return cb(null, true)
+        return cb(new Error(`Origin ${origin} not allowed by CORS`))
+      },
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
       credentials: true,
     },

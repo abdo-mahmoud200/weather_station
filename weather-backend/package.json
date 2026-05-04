@@ -4,6 +4,9 @@
   "private": true,
   "description": "Node.js, Express, TypeScript backend for Egyptian wilderness weather station monitoring.",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
     "build": "tsc",

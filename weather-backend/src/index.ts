@@ -13,7 +13,10 @@ import { initWebSocket } from './websocket/wsServer'
 import { startSimulator, stopSimulator } from './services/simulator'
 
 const PORT = Number(process.env.PORT || 3001)
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173'
+const CORS_ORIGINS = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map((value) => value.trim())
+  .filter(Boolean)
 
 const app = express()
 const server = http.createServer(app)
@@ -22,7 +25,11 @@ initWebSocket(server)
 
 app.use(
   cors({
-    origin: CORS_ORIGIN,
+    origin: (origin, cb) => {
+      if (!origin) return cb(null, true)
+      if (CORS_ORIGINS.includes(origin) || CORS_ORIGINS.includes('*')) return cb(null, true)
+      return cb(new Error(`Origin ${origin} not allowed by CORS`))
+    },
     credentials: true,
   }),
 )
