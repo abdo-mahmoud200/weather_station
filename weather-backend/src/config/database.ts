@@ -3,9 +3,10 @@ import fs from 'fs'
 import path from 'path'
 import { SEEDED_STATIONS } from '../models/Station'
 
-const DATABASE_DIR = process.env.DATABASE_DIR
-  ? path.resolve(process.env.DATABASE_DIR)
-  : path.resolve(__dirname, '../../database')
+const DEFAULT_DATABASE_DIR = path.resolve(__dirname, '../../database')
+const DATABASE_DIR = path.resolve(
+  process.env.DATABASE_DIR || process.env.RAILWAY_VOLUME_MOUNT_PATH || DEFAULT_DATABASE_DIR,
+)
 const DATABASE_PATH = path.join(DATABASE_DIR, 'weather.db')
 
 fs.mkdirSync(DATABASE_DIR, { recursive: true })
