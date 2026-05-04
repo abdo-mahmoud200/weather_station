@@ -2,10 +2,10 @@
   "$schema": "https://railway.com/railway.schema.json",
   "build": {
     "builder": "RAILPACK",
-    "buildCommand": "cd weather-backend && npm ci --include=dev && npm run build"
+    "buildCommand": "npm ci --include=dev && npm run build"
   },
   "deploy": {
-    "startCommand": "cd weather-backend && npm start",
+    "startCommand": "npm start",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
